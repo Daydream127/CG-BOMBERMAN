@@ -154,7 +154,8 @@
         <div id="topViewContainer"></div>
     </div>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
     <script>
         // Controle de estado do jogo
         let gameActive = false;
@@ -212,7 +213,7 @@
         // Matriz do labirinto: 0 = caminho livre, 1 = parede/obstáculo
         const mazeLayout = [
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 1, 1, 1, 0, 0, 1, 1, 1, 0],
+            [0, 1, 1, 2, 0, 0, 1, 1, 1, 0],
             [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
             [0, 1, 0, 1, 1, 1, 1, 0, 1, 0],
             [0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
@@ -223,6 +224,34 @@
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         ];
         
+
+        const objLoader = new THREE.OBJLoader();
+
+        // Function to load and add an .obj model
+        function loadOBJModel(filePath, position, parentGroup) {
+            objLoader.load(filePath, 
+                // onLoad callback
+                function (object) {
+                    object.position.set(position.x, position.y, position.z);
+                    object.scale.set(1,1,1); // Ajuste a escala conforme necessário
+                    object.castShadow = true;
+                    object.receiveShadow = true;
+                    parentGroup.add(object);
+                },
+                // onProgress callback
+                function (xhr) {
+                    console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+                },
+                // onError callback
+                function (error) {
+                    console.error('Error loading OBJ:', error);
+                }
+            );
+        }
+
+
+
+
         // Controle de posição em grade
         let currentGridX = 1;  // Posição inicial X na grade
         let currentGridZ = 1;  // Posição inicial Z na grade
@@ -416,6 +445,10 @@
                         block.castShadow = true;
                         block.receiveShadow = true;
                         arena.add(block);
+                    }
+                    else if (mazeLayout[z][x] === 2) {
+                        const worldPos = gridToWorld(x, z);
+                        loadOBJModel('a.obj', { x: worldPos.x, y: 0, z: worldPos.z }, arena);
                     }
                 }
             }
