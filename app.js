@@ -493,11 +493,9 @@ function canMoveToCell(gridX, gridZ) {
     }
 
     // Verifica se a célula não é uma parede
-    if (mazeLayout[gridZ][gridX] === 1) {
-        return false;
-    }
+    return mazeLayout[gridZ][gridX] !== 1;
 
-    return true;
+
 }
 
 // Controles de teclado - keyup
