@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CG-BOMBERMAN</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.176.0/build/three.module.js",
+                "three/examples/jsm/loaders/OBJLoader.js": "https://unpkg.com/three@0.176.0/examples/jsm/loaders/OBJLoader.js"            }
+        }
+    </script>
+    <script src = "./app.js" type="module"></script>
+</head>
+<body>
+<!-- Menu Principal -->
+<div id="menuContainer">
+    <h1 id="gameTitle">BOMBERMAN 3D</h1>
+    <button class="menuButton" id="playButton">JOGAR</button>
+    <button class="menuButton" id="creditsButton">CRÉDITOS</button>
+</div>
+
+<!-- Tela de Créditos -->
+<div id="creditsContainer">
+    <div id="creditsContent">
+        <h2 id="creditsTitle">CRÉDITOS</h2>
+        <div id="creditsText">
+            <p>DAVID SANTOS AL78851</p>
+            <p>DIOGO PINTO AL78734</p>
+            <p>FILIPA MONTEIRO AL78231</p>
+            <p>JOÃO ESTEVES AL78211</p>
+            <p>Este jogo foi desenvolvido no âmbito da UC Computação Gráfica.</p>
+        </div>
+        <button id="backButton">VOLTAR</button>
+    </div>
+</div>
+
+<!-- Conteúdo do Jogo -->
+<div id="gameContainer">
+    <div id="info">Use WASD</div>
+    <div id="topViewContainer"></div>
+</div>
+
+</body>
+</html>

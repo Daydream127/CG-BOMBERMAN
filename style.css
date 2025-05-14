@@ -1,0 +1,119 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    background-color: #000;
+    font-family: 'Arial', sans-serif;
+}
+canvas {
+    display: block;
+}
+#info {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    color: white;
+    font-family: monospace;
+    font-size: 14px;
+    background-color: rgba(0,0,0,0.5);
+    padding: 10px;
+    border-radius: 5px;
+}
+#topViewContainer {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 200px;
+    height: 200px;
+    border: 2px solid white;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+/* Estilos para o menu */
+#menuContainer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 100;
+}
+#gameTitle {
+    font-size: 4em;
+    color: #ff6600;
+    text-shadow: 0 0 10px #ff9933, 0 0 20px #ffcc00;
+    margin-bottom: 50px;
+    font-weight: bold;
+}
+.menuButton {
+    background-color: #ff6600;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 15px 50px;
+    margin: 10px;
+    font-size: 1.5em;
+    cursor: pointer;
+    transition: all 0.3s;
+    width: 200px;
+    text-align: center;
+}
+.menuButton:hover {
+    background-color: #ff9933;
+    transform: scale(1.05);
+    box-shadow: 0 0 15px #ffcc00;
+}
+#creditsContainer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 90;
+    color: white;
+    display: none;
+}
+#creditsContent {
+    width: 80%;
+    max-width: 600px;
+    text-align: center;
+    padding: 20px;
+    border-radius: 10px;
+    background-color: rgba(255, 102, 0, 0.2);
+}
+#creditsTitle {
+    font-size: 2.5em;
+    color: #ff6600;
+    margin-bottom: 20px;
+}
+#creditsText {
+    font-size: 1.2em;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+#backButton {
+    background-color: #ff6600;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 30px;
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+#backButton:hover {
+    background-color: #ff9933;
+    transform: scale(1.05);
+}
+#gameContainer {
+    display: none; /* Inicialmente oculto */
+}
