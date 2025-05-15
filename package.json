@@ -1,0 +1,22 @@
+{
+  "name": "cg-bomberman",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Daydream127/CG-BOMBERMAN"
+  },
+  "private": true,
+  "devDependencies": {
+    "vite": "^6.3.5"
+  },
+  "dependencies": {
+    "create-vite": "^6.5.0",
+    "three": "^0.176.0"
+  }
+}
