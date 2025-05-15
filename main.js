@@ -149,7 +149,7 @@ function init() {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87CEEB); // Céu azul
 
-    // Câmera isométrica
+    // Camera isométrica
     const aspect = window.innerWidth / window.innerHeight;
     camera = new THREE.OrthographicCamera(
         -arenaSize * aspect / 2,
@@ -159,11 +159,10 @@ function init() {
         1, 1000
     );
 
-    // Posicionamento da câmera isométrica
+    // Posicionamento da camera isométrica
     camera.position.set(arenaSize, arenaSize, arenaSize);
     camera.lookAt(0, 0, 0);
 
-    // Renderizador
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
@@ -174,7 +173,7 @@ function init() {
     topViewScene = new THREE.Scene();
     topViewScene.background = new THREE.Color(0x000000);
 
-    // Câmera top-down (vista de cima)
+    // Camera top-down (vista de cima)
     topViewCamera = new THREE.OrthographicCamera(
         -arenaSize / 2,
         arenaSize / 2,
@@ -183,12 +182,12 @@ function init() {
         1, 1000
     );
 
-    // Posicionamento da câmera top-down
+    // Posicionamento da camera top-down
     topViewCamera.position.set(0, 30, 0);
     topViewCamera.lookAt(0, 0, 0);
     topViewCamera.rotation.z = Math.PI; // Para orientar corretamente o mapa
 
-    // Renderizador para visão de topo
+    // Renderer para visão de topo
     topViewRenderer = new THREE.WebGLRenderer({ antialias: true });
     topViewRenderer.setSize(200, 200);
     topViewRenderer.shadowMap.enabled = true;
@@ -219,7 +218,7 @@ function init() {
     document.addEventListener('keydown', onKeyDown, false);
     document.addEventListener('keyup', onKeyUp, false);
 
-    // Responsividade
+    // Responsiveness
     window.addEventListener('resize', onWindowResize, false);
 
     // Iniciar animação
@@ -331,8 +330,8 @@ function createMazeBlocks() {
                 const worldPos = gridToWorld(x, z);
                 // Agora passamos tanto o arquivo OBJ quanto o MTL
                 loadOBJModel(
-                    '/assets/models/deer/deer.obj',  // Caminho para seu arquivo .obj
-                    '/assets/models/deer/deer.mtl', // Caminho para seu arquivo .mtl
+                    '/assets/models/deer/deer.obj',
+                    '/assets/models/deer/deer.mtl',
                     { x: worldPos.x, y: 0, z: worldPos.z },
                     arena
                 );
@@ -355,7 +354,7 @@ function createTopViewArena() {
     floor.rotation.x = -Math.PI / 2;
     topViewArena.add(floor);
 
-    // Adicionar grade ao minimapa
+    // Adicionar grade ao minimap
     createTopViewGrid();
 
     // Paredes externas
