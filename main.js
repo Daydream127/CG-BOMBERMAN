@@ -1,6 +1,8 @@
 import * as THREE from 'three';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
 
+// Controle de estado do jogo
 let gameActive = false;
 
 // Referencias do DOM
@@ -67,30 +69,54 @@ const mazeLayout = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 ];
 
-
+// Criar os loaders
+const mtlLoader = new MTLLoader();
 const objLoader = new OBJLoader();
 
-// Function to load and add an .obj model
-function loadOBJModel(filePath, position, parentGroup) {
-    objLoader.load(filePath,
-        // onLoad callback
-        function (object) {
-            object.position.set(position.x, position.y, position.z);
-            object.scale.set(1,1,1); // Ajuste a escala conforme necessário
-            object.castShadow = true;
-            object.receiveShadow = true;
-            parentGroup.add(object);
+// Function to load and add an .obj model with materials
+function loadOBJModel(objPath, mtlPath, position, parentGroup) {
+    // Primeiro carrega o arquivo MTL
+    mtlLoader.load(mtlPath, function(materials) {
+            materials.preload();
+
+            // Configura o OBJLoader para usar os materiais
+            objLoader.setMaterials(materials);
+
+            // Depois carrega o arquivo OBJ
+            objLoader.load(objPath,
+                // onLoad callback
+                function (object) {
+                    object.traverse(function(child) {
+                        if (child instanceof THREE.Mesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                        }
+                    });
+
+                    object.position.set(position.x, position.y, position.z);
+                    object.scale.set(1, 1, 1); // Ajuste a escala conforme necessário
+                    parentGroup.add(object);
+                },
+                // onProgress callback
+                function (xhr) {
+                    console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+                },
+                // onError callback
+                function (error) {
+                    console.error('Error loading OBJ:', error);
+                }
+            );
         },
         // onProgress callback
         function (xhr) {
-            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+            console.log((xhr.loaded / xhr.total * 100) + '% material loaded');
         },
         // onError callback
         function (error) {
-            console.error('Error loading OBJ:', error);
-        }
-    );
+            console.error('Error loading MTL:', error);
+        });
 }
+
 
 
 
@@ -201,19 +227,32 @@ function init() {
 }
 
 // Criar arena com piso e quatro paredes
+// Add this near the top with other constant declarations
+const textureLoader = new THREE.TextureLoader();
+
+// Update the createArena function where the floor is created
 function createArena() {
     arena = new THREE.Group();
 
-    // Piso
+    // Load and configure floor texture
+    const floorTexture = textureLoader.load('assets/textures/DirtPath-NEO.png');
+    floorTexture.wrapS = THREE.RepeatWrapping;
+    floorTexture.wrapT = THREE.RepeatWrapping;
+    floorTexture.repeat.set(gridSize, gridSize); // Repeat texture for each grid cell
+
+    // Create floor with texture
     const floorGeometry = new THREE.PlaneGeometry(arenaSize, arenaSize);
     const floorMaterial = new THREE.MeshLambertMaterial({
-        color: 0x339933,
+        map: floorTexture,
         side: THREE.DoubleSide
     });
     const floor = new THREE.Mesh(floorGeometry, floorMaterial);
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     arena.add(floor);
+
+    // ...rest of the createArena function remains the same...
+
 
     // Adicionar grade ao piso
     createGrid();
@@ -290,7 +329,13 @@ function createMazeBlocks() {
             }
             else if (mazeLayout[z][x] === 2) {
                 const worldPos = gridToWorld(x, z);
-                loadOBJModel('a.obj', { x: worldPos.x, y: 0, z: worldPos.z }, arena);
+                // Agora passamos tanto o arquivo OBJ quanto o MTL
+                loadOBJModel(
+                    '/assets/models/deer/deer.obj',  // Caminho para seu arquivo .obj
+                    '/assets/models/deer/deer.mtl', // Caminho para seu arquivo .mtl
+                    { x: worldPos.x, y: 0, z: worldPos.z },
+                    arena
+                );
             }
         }
     }
@@ -493,9 +538,11 @@ function canMoveToCell(gridX, gridZ) {
     }
 
     // Verifica se a célula não é uma parede
-    return mazeLayout[gridZ][gridX] !== 1;
+    if (mazeLayout[gridZ][gridX] === 1) {
+        return false;
+    }
 
-
+    return true;
 }
 
 // Controles de teclado - keyup
@@ -603,3 +650,6 @@ function updateTopViewPlayer() {
         topViewPlayer.position.z = player.position.z;
     }
 }
+
+// Não iniciar o jogo automaticamente
+// Apenas exibir o menu e aguardar interação
