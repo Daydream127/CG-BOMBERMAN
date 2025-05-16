@@ -2,10 +2,13 @@ import * as THREE from 'three';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
 
-// Controle de estado do jogo
+const mtlLoader = new MTLLoader();
+const objLoader = new OBJLoader();
+const textureLoader = new THREE.TextureLoader();
+
 let gameActive = false;
 
-// Referencias do DOM
+// coisas do html
 const menuContainer = document.getElementById('menuContainer');
 const creditsContainer = document.getElementById('creditsContainer');
 const gameContainer = document.getElementById('gameContainer');
@@ -13,34 +16,33 @@ const playButton = document.getElementById('playButton');
 const creditsButton = document.getElementById('creditsButton');
 const backButton = document.getElementById('backButton');
 
-// Event listeners para os botões do menu
+// eventos para os botões html
 playButton.addEventListener('click', startGame);
 creditsButton.addEventListener('click', showCredits);
 backButton.addEventListener('click', hideCredits);
 
-// Função para iniciar o jogo
+// função para iniciar o jogo (chamada pelo botão play)
 function startGame() {
     menuContainer.style.display = 'none';
     gameContainer.style.display = 'block';
     gameActive = true;
 
-    // Iniciar o jogo apenas quando o botão play for clicado
     init();
 }
 
-// Função para mostrar os créditos
+// função para mostrar os créditos
 function showCredits() {
     menuContainer.style.display = 'none';
     creditsContainer.style.display = 'flex';
 }
 
-// Função para esconder os créditos
+// função para esconder os créditos
 function hideCredits() {
     creditsContainer.style.display = 'none';
     menuContainer.style.display = 'flex';
 }
 
-// Variáveis principais
+// variáveis
 let scene, camera, renderer;
 let topViewScene, topViewCamera, topViewRenderer;
 let player, arena, topViewPlayer, topViewArena;
@@ -48,14 +50,14 @@ let moveForward = false;
 let moveBackward = false;
 let moveLeft = false;
 let moveRight = false;
-let canMove = true; // Controle para movimentação por casas
-const playerSpeed = 1.0; // Velocidade ajustada para movimentação por casas
+let canMove = true;
+const playerSpeed = 1.0;
 const arenaSize = 20;
 const wallHeight = 2;
-const gridSize = 10; // Define o tamanho da grade (10x10)
-const cellSize = arenaSize / gridSize; // Tamanho de cada célula da grade
+const gridSize = 10; // 10*10
+const cellSize = arenaSize / gridSize; // tamanho de cada célula
 
-// Matriz do labirinto: 0 = caminho livre, 1 = parede/obstáculo
+// Matriz do labirinto: 0 = caminho livre, 1 = parede/obstáculo, 2 = voxel
 const mazeLayout = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 1, 1, 2, 0, 0, 1, 1, 1, 0],
@@ -69,22 +71,15 @@ const mazeLayout = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 ];
 
-// Criar os loaders
-const mtlLoader = new MTLLoader();
-const objLoader = new OBJLoader();
 
-// Function to load and add an .obj model with materials
 function loadOBJModel(objPath, mtlPath, position, parentGroup) {
-    // Primeiro carrega o arquivo MTL
     mtlLoader.load(mtlPath, function(materials) {
             materials.preload();
 
-            // Configura o OBJLoader para usar os materiais
             objLoader.setMaterials(materials);
 
-            // Depois carrega o arquivo OBJ
             objLoader.load(objPath,
-                // onLoad callback
+                // onLoad
                 function (object) {
                     object.traverse(function(child) {
                         if (child instanceof THREE.Mesh) {
@@ -97,36 +92,32 @@ function loadOBJModel(objPath, mtlPath, position, parentGroup) {
                     object.scale.set(1, 1, 1); // Ajuste a escala conforme necessário
                     parentGroup.add(object);
                 },
-                // onProgress callback
+                // onProgress
                 function (xhr) {
                     console.log((xhr.loaded / xhr.total * 100) + '% loaded');
                 },
-                // onError callback
+                // onError
                 function (error) {
                     console.error('Error loading OBJ:', error);
                 }
             );
         },
-        // onProgress callback
+        // onProgress
         function (xhr) {
             console.log((xhr.loaded / xhr.total * 100) + '% material loaded');
         },
-        // onError callback
+        // onError
         function (error) {
             console.error('Error loading MTL:', error);
         });
 }
 
+let currentGridX = 0;  // Posição inicial X na grid
+let currentGridZ = 0;  // Posição inicial Z na grid
+let targetGridX = 0;   // Posição alvo X na grid
+let targetGridZ = 0;   // Posição alvo Z na grid
 
-
-
-// Controle de posição em grade
-let currentGridX = 1;  // Posição inicial X na grade
-let currentGridZ = 1;  // Posição inicial Z na grade
-let targetGridX = 1;   // Posição alvo X na grade
-let targetGridZ = 1;   // Posição alvo Z na grade
-
-// Posição em coordenadas do mundo
+// posição em coordenadas
 function gridToWorld(gridX, gridZ) {
     return {
         x: (gridX - gridSize/2 + 0.5) * cellSize,
@@ -134,7 +125,7 @@ function gridToWorld(gridX, gridZ) {
     };
 }
 
-// Posição da grade em coordenadas do mundo
+// posição em grid
 function worldToGrid(worldX, worldZ) {
     return {
         x: Math.floor((worldX + arenaSize/2) / cellSize),
@@ -142,14 +133,13 @@ function worldToGrid(worldX, worldZ) {
     };
 }
 
-// Inicialização
+// inicializa jogo
 function init() {
-    // ===== CENA PRINCIPAL =====
-    // Cena
+    // cena
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87CEEB); // Céu azul
+    scene.background = new THREE.Color(0x87CEEB); // azul
 
-    // Camera isométrica
+    // camera isométrica
     const aspect = window.innerWidth / window.innerHeight;
     camera = new THREE.OrthographicCamera(
         -arenaSize * aspect / 2,
@@ -159,7 +149,7 @@ function init() {
         1, 1000
     );
 
-    // Posicionamento da camera isométrica
+    // posicionamento da camera isométrica
     camera.position.set(arenaSize, arenaSize, arenaSize);
     camera.lookAt(0, 0, 0);
 
@@ -168,12 +158,11 @@ function init() {
     renderer.shadowMap.enabled = true;
     gameContainer.appendChild(renderer.domElement);
 
-    // ===== CENA TOP VIEW =====
-    // Cena de visão de topo
+    // cena top view
     topViewScene = new THREE.Scene();
     topViewScene.background = new THREE.Color(0x000000);
 
-    // Camera top-down (vista de cima)
+    // camara top-down (vista de cima)
     topViewCamera = new THREE.OrthographicCamera(
         -arenaSize / 2,
         arenaSize / 2,
@@ -182,22 +171,22 @@ function init() {
         1, 1000
     );
 
-    // Posicionamento da camera top-down
+    // posicionamento da camera top-down
     topViewCamera.position.set(0, 30, 0);
     topViewCamera.lookAt(0, 0, 0);
-    topViewCamera.rotation.z = Math.PI; // Para orientar corretamente o mapa
+    topViewCamera.rotation.z = 0; // para orientar corretamente o mapa
 
-    // Renderer para visão de topo
+    // renderer para visão de topo
     topViewRenderer = new THREE.WebGLRenderer({ antialias: true });
     topViewRenderer.setSize(200, 200);
     topViewRenderer.shadowMap.enabled = true;
     document.getElementById('topViewContainer').appendChild(topViewRenderer.domElement);
 
-    // Luz
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    // luz
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
     directionalLight.position.set(20, 30, 20);
     directionalLight.castShadow = true;
     directionalLight.shadow.camera.left = -arenaSize;
@@ -206,40 +195,35 @@ function init() {
     directionalLight.shadow.camera.bottom = -arenaSize;
     scene.add(directionalLight);
 
-    // Criar arena principal e de topo
+    // criar arena principal e de topo
     createArena();
     createTopViewArena();
 
-    // Criar jogador principal e de topo
+    // criar jogador principal e de topo
     createPlayer();
     createTopViewPlayer();
 
-    // Controles
+    // controlos
     document.addEventListener('keydown', onKeyDown, false);
     document.addEventListener('keyup', onKeyUp, false);
 
-    // Responsiveness
+    // responsiveness
     window.addEventListener('resize', onWindowResize, false);
 
-    // Iniciar animação
+    // iniciar animação
     animate();
 }
 
-// Criar arena com piso e quatro paredes
-// Add this near the top with other constant declarations
-const textureLoader = new THREE.TextureLoader();
-
-// Update the createArena function where the floor is created
 function createArena() {
     arena = new THREE.Group();
 
-    // Load and configure floor texture
+    // carregar floor
     const floorTexture = textureLoader.load('assets/textures/DirtPath-NEO.png');
     floorTexture.wrapS = THREE.RepeatWrapping;
     floorTexture.wrapT = THREE.RepeatWrapping;
-    floorTexture.repeat.set(gridSize, gridSize); // Repeat texture for each grid cell
+    floorTexture.repeat.set(gridSize, gridSize); // repetir textura para cobrir o chão
 
-    // Create floor with texture
+    // criar floor com a textura
     const floorGeometry = new THREE.PlaneGeometry(arenaSize, arenaSize);
     const floorMaterial = new THREE.MeshLambertMaterial({
         map: floorTexture,
@@ -250,50 +234,47 @@ function createArena() {
     floor.receiveShadow = true;
     arena.add(floor);
 
-    // ...rest of the createArena function remains the same...
 
-
-    // Adicionar grade ao piso
+    // adiciona grid
     createGrid();
 
-    // Paredes externas
+    // paredes externas
     const wallMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
 
-    // Parede norte
+    // norte
     const wallNorth = createWall(arenaSize, wallHeight, 0.5);
     wallNorth.position.set(0, wallHeight/2, -arenaSize/2);
     arena.add(wallNorth);
 
-    // Parede sul
+    // sul
     const wallSouth = createWall(arenaSize, wallHeight, 0.5);
     wallSouth.position.set(0, wallHeight/2, arenaSize/2);
     arena.add(wallSouth);
 
-    // Parede leste
+    // este
     const wallEast = createWall(0.5, wallHeight, arenaSize);
     wallEast.position.set(arenaSize/2, wallHeight/2, 0);
     arena.add(wallEast);
 
-    // Parede oeste
+    // oeste
     const wallWest = createWall(0.5, wallHeight, arenaSize);
     wallWest.position.set(-arenaSize/2, wallHeight/2, 0);
     arena.add(wallWest);
 
-    // Adicionar os blocos do labirinto
+    // blocos do labirinto
     createMazeBlocks();
 
     scene.add(arena);
 }
 
-// Criar linhas da grade no chão
+// criar linhas da grid no chão
 function createGrid() {
     const gridMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 0.3, transparent: true });
 
-    // Linhas horizontais e verticais
     for (let i = 0; i <= gridSize; i++) {
         const pos = (i / gridSize) * arenaSize - arenaSize / 2;
 
-        // Linha horizontal
+        // linha horizontal
         const hGeometry = new THREE.BufferGeometry().setFromPoints([
             new THREE.Vector3(-arenaSize/2, 0.01, pos),
             new THREE.Vector3(arenaSize/2, 0.01, pos)
@@ -301,7 +282,7 @@ function createGrid() {
         const hLine = new THREE.Line(hGeometry, gridMaterial);
         arena.add(hLine);
 
-        // Linha vertical
+        // linha vertical
         const vGeometry = new THREE.BufferGeometry().setFromPoints([
             new THREE.Vector3(pos, 0.01, -arenaSize/2),
             new THREE.Vector3(pos, 0.01, arenaSize/2)
@@ -311,7 +292,7 @@ function createGrid() {
     }
 }
 
-// Criar blocos do labirinto
+// criar blocos do labirinto
 function createMazeBlocks() {
     const blockGeometry = new THREE.BoxGeometry(cellSize * 0.9, wallHeight, cellSize * 0.9);
     const blockMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
@@ -326,9 +307,8 @@ function createMazeBlocks() {
                 block.receiveShadow = true;
                 arena.add(block);
             }
-            else if (mazeLayout[z][x] === 2) {
+            else if (mazeLayout[z][x] === 2) { // teste obj/mtl
                 const worldPos = gridToWorld(x, z);
-                // Agora passamos tanto o arquivo OBJ quanto o MTL
                 loadOBJModel(
                     '/assets/models/deer/deer.obj',
                     '/assets/models/deer/deer.mtl',
@@ -340,11 +320,11 @@ function createMazeBlocks() {
     }
 }
 
-// Criar arena para visão de topo
+// criar arena para visão de topo
 function createTopViewArena() {
     topViewArena = new THREE.Group();
 
-    // Piso
+    // floor
     const floorGeometry = new THREE.PlaneGeometry(arenaSize, arenaSize);
     const floorMaterial = new THREE.MeshBasicMaterial({
         color: 0x339933,
@@ -354,45 +334,44 @@ function createTopViewArena() {
     floor.rotation.x = -Math.PI / 2;
     topViewArena.add(floor);
 
-    // Adicionar grade ao minimap
+    // grid
     createTopViewGrid();
 
-    // Paredes externas
-    // Parede norte (vermelha)
+    // paredes externas
+    // norte (vermelha)
     const wallNorth = createTopViewWall(arenaSize, 0.5, 0.5, 0xff0000);
     wallNorth.position.set(0, 0.25, -arenaSize/2);
     topViewArena.add(wallNorth);
 
-    // Parede sul (azul)
+    // sul (azul)
     const wallSouth = createTopViewWall(arenaSize, 0.5, 0.5, 0x0000ff);
     wallSouth.position.set(0, 0.25, arenaSize/2);
     topViewArena.add(wallSouth);
 
-    // Parede leste (amarela)
+    // este (amarela)
     const wallEast = createTopViewWall(0.5, 0.5, arenaSize, 0xffff00);
     wallEast.position.set(arenaSize/2, 0.25, 0);
     topViewArena.add(wallEast);
 
-    // Parede oeste (verde)
+    // oeste (verde)
     const wallWest = createTopViewWall(0.5, 0.5, arenaSize, 0x00ff00);
     wallWest.position.set(-arenaSize/2, 0.25, 0);
     topViewArena.add(wallWest);
 
-    // Adicionar blocos do labirinto na visualização de topo
+    // blocos do labirinto
     createTopViewMazeBlocks();
 
     topViewScene.add(topViewArena);
 }
 
-// Criar linhas da grade na visualização de topo
+// criar linhas da grade na visualização de topo
 function createTopViewGrid() {
     const gridMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 0.5, transparent: true });
 
-    // Linhas horizontais e verticais
     for (let i = 0; i <= gridSize; i++) {
         const pos = (i / gridSize) * arenaSize - arenaSize / 2;
 
-        // Linha horizontal
+        // linha horizontal
         const hGeometry = new THREE.BufferGeometry().setFromPoints([
             new THREE.Vector3(-arenaSize/2, 0.01, pos),
             new THREE.Vector3(arenaSize/2, 0.01, pos)
@@ -400,7 +379,7 @@ function createTopViewGrid() {
         const hLine = new THREE.Line(hGeometry, gridMaterial);
         topViewArena.add(hLine);
 
-        // Linha vertical
+        // linha vertical
         const vGeometry = new THREE.BufferGeometry().setFromPoints([
             new THREE.Vector3(pos, 0.01, -arenaSize/2),
             new THREE.Vector3(pos, 0.01, arenaSize/2)
@@ -410,7 +389,7 @@ function createTopViewGrid() {
     }
 }
 
-// Criar blocos do labirinto na visualização de topo
+// blocos do labirinto na top view
 function createTopViewMazeBlocks() {
     const blockGeometry = new THREE.BoxGeometry(cellSize * 0.9, 0.5, cellSize * 0.9);
     const blockMaterial = new THREE.MeshBasicMaterial({ color: 0x333333 });
@@ -427,7 +406,7 @@ function createTopViewMazeBlocks() {
     }
 }
 
-// Função auxiliar para criar paredes
+// criar paredes
 function createWall(width, height, depth) {
     const geometry = new THREE.BoxGeometry(width, height, depth);
     const material = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
@@ -437,84 +416,82 @@ function createWall(width, height, depth) {
     return wall;
 }
 
-// Função auxiliar para criar paredes na visão de topo
+// criar paredes na top view
 function createTopViewWall(width, height, depth, color) {
     const geometry = new THREE.BoxGeometry(width, height, depth);
     const material = new THREE.MeshBasicMaterial({ color: color });
     return new THREE.Mesh(geometry, material);
 }
 
-// Criar jogador
+// criar jogador
 function createPlayer() {
-    // Corpo do personagem
+    // corpo
     const bodyGeometry = new THREE.BoxGeometry(0.8, 1.2, 0.8);
     const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x3333ff });
     const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
     body.position.y = 0.6;
     body.castShadow = true;
 
-    // Cabeça do personagem
+    // cabeça do personagem
     const headGeometry = new THREE.SphereGeometry(0.5, 16, 16);
     const headMaterial = new THREE.MeshLambertMaterial({ color: 0xffcc99 });
     const head = new THREE.Mesh(headGeometry, headMaterial);
     head.position.y = 1.5;
     head.castShadow = true;
 
-    // Grupo de jogador completo
+    // jogador completo
     player = new THREE.Group();
     player.add(body);
     player.add(head);
 
-    // Posição inicial baseada na grade
+    // posição inicial baseada na grade
     const initialPos = gridToWorld(currentGridX, currentGridZ);
     player.position.set(initialPos.x, 0, initialPos.z);
 
     scene.add(player);
 }
 
-// Criar jogador na visão de topo
+// jogador na top view
 function createTopViewPlayer() {
-    // Para a visão de topo, vamos usar um marcador quadrado que ocupa uma célula
     const geometry = new THREE.BoxGeometry(cellSize * 0.7, 0.2, cellSize * 0.7);
     const material = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Vermelho para destacar
 
     topViewPlayer = new THREE.Mesh(geometry, material);
 
-    // Posição inicial baseada na grade
+    // posição inicial baseada na grade
     const initialPos = gridToWorld(currentGridX, currentGridZ);
     topViewPlayer.position.set(initialPos.x, 0.5, initialPos.z);
 
     topViewScene.add(topViewPlayer);
 }
 
-// Controles de teclado - keydown
+// controlos de teclado - keydown
 function onKeyDown(event) {
-    // Só processe os comandos se o jogador puder se mover e o jogo estiver ativo
     if (!canMove || !gameActive) return;
 
     switch (event.code) {
-        case 'KeyW': // W
+        case 'KeyW':
             if (canMoveToCell(currentGridX, currentGridZ - 1)) {
                 moveForward = true;
                 targetGridZ = currentGridZ - 1;
                 canMove = false;
             }
             break;
-        case 'KeyA': // A
+        case 'KeyA':
             if (canMoveToCell(currentGridX - 1, currentGridZ)) {
                 moveLeft = true;
                 targetGridX = currentGridX - 1;
                 canMove = false;
             }
             break;
-        case 'KeyS': // S
+        case 'KeyS':
             if (canMoveToCell(currentGridX, currentGridZ + 1)) {
                 moveBackward = true;
                 targetGridZ = currentGridZ + 1;
                 canMove = false;
             }
             break;
-        case 'KeyD': // D
+        case 'KeyD':
             if (canMoveToCell(currentGridX + 1, currentGridZ)) {
                 moveRight = true;
                 targetGridX = currentGridX + 1;
@@ -531,36 +508,36 @@ function onKeyDown(event) {
 
 // Verificar se o jogador pode mover para uma determinada célula
 function canMoveToCell(gridX, gridZ) {
-    // Verifica se a célula está dentro da grade
+    // verifica se a célula está dentro da grid
     if (gridX < 0 || gridX >= gridSize || gridZ < 0 || gridZ >= gridSize) {
         return false;
     }
 
-    // Verifica se a célula não é uma parede
-    return mazeLayout[gridZ][gridX] !== 1;
-
-
+    // Verifica se a célula está vazia
+    return mazeLayout[gridZ][gridX] === 0;
+    // se a célula for 1, é uma parede e não pode passar
+    // se a célula for 2, é um obstáculo (vox) e pode passar
 }
 
-// Controles de teclado - keyup
+// controlos de teclado - keyup
 function onKeyUp(event) {
     switch (event.code) {
-        case 'KeyW': // W
+        case 'KeyW':
             moveForward = false;
             break;
-        case 'KeyA': // A
+        case 'KeyA':
             moveLeft = false;
             break;
-        case 'KeyS': // S
+        case 'KeyS':
             moveBackward = false;
             break;
-        case 'KeyD': // D
+        case 'KeyD':
             moveRight = false;
             break;
     }
 }
 
-// Redimensionamento da janela
+// resize
 function onWindowResize() {
     if (!gameActive) return;
 
@@ -573,80 +550,77 @@ function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-// Verificar colisões com as paredes
+// verificar colisões com as paredes
 function checkWallCollisions() {
-    // Tamanho do jogador
-    const playerSize = 0.4; // Metade da largura do jogador
+    // tamanho do jogador
+    const playerSize = 0.4;
 
-    // Limites da arena (considerando o tamanho do jogador)
+    // limites da arena (considerando o tamanho do jogador)
     const limit = arenaSize / 2 - playerSize;
 
-    // Limitar posição do jogador dentro da arena
+    // limitar posição do jogador dentro da arena
     if (player.position.x > limit) player.position.x = limit;
     if (player.position.x < -limit) player.position.x = -limit;
     if (player.position.z > limit) player.position.z = limit;
     if (player.position.z < -limit) player.position.z = -limit;
 }
 
-// Loop de animação
+// loop de animação
 function animate() {
     requestAnimationFrame(animate);
 
     if (gameActive) {
-        // Atualizar movimento do jogador baseado no sistema de grade
+        // atualizar movimento do jogador baseado no sistema da grid
         updatePlayerMovement();
 
-        // Renderizar ambas as cenas
+        // renderizar ambas as cenas
         renderer.render(scene, camera);
         topViewRenderer.render(topViewScene, topViewCamera);
     }
 }
 
-// Atualizar o movimento do jogador em casas
+// atualizar o movimento do jogador em casas
 function updatePlayerMovement() {
     if (!canMove) {
         const targetPos = gridToWorld(targetGridX, targetGridZ);
 
-        // Movimento suave entre as células
+        // movimento suave entre as células
         const dx = targetPos.x - player.position.x;
         const dz = targetPos.z - player.position.z;
 
-        // Determinar se chegou próximo o suficiente à posição de destino
+        // determinar se chegou próximo o suficiente à posição de destino
         if (Math.abs(dx) < 0.1 && Math.abs(dz) < 0.1) {
-            // Chegou à posição exata da célula alvo
+            // chegou à posição exata da célula alvo
             player.position.x = targetPos.x;
             player.position.z = targetPos.z;
 
-            // Atualizar posição atual na grade
+            // atualizar posição atual na grade
             currentGridX = targetGridX;
             currentGridZ = targetGridZ;
 
-            // Resetar variáveis de movimento
+            // resetar variáveis de movimento
             moveForward = false;
             moveBackward = false;
             moveLeft = false;
             moveRight = false;
 
-            // Permitir novo movimento
+            // permitir novo movimento
             canMove = true;
         } else {
-            // Mover na direção do alvo
+            // mover na direção do alvo
             player.position.x += Math.sign(dx) * Math.min(playerSpeed, Math.abs(dx));
             player.position.z += Math.sign(dz) * Math.min(playerSpeed, Math.abs(dz));
         }
     }
 
-    // Atualizar a posição do jogador na visão de topo
+    // atualizar a posição do jogador na visão de topo
     updateTopViewPlayer();
 }
 
-// Atualizar posição do jogador na visão de topo
+// atualizar posição do jogador na visão de topo
 function updateTopViewPlayer() {
     if (topViewPlayer && player) {
         topViewPlayer.position.x = player.position.x;
         topViewPlayer.position.z = player.position.z;
     }
 }
-
-// Não iniciar o jogo automaticamente
-// Apenas exibir o menu e aguardar interação
