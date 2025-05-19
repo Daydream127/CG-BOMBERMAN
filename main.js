@@ -26,7 +26,9 @@ function startGame() {
     menuContainer.style.display = 'none';
     gameContainer.style.display = 'block';
     gameActive = true;
-
+    isGameOver = false;
+    playerLives = 3;
+    updateHUD();
     init();
 }
 
@@ -44,6 +46,8 @@ function hideCredits() {
 
 // variáveis
 let scene, camera, renderer;
+let playerLives = 3;
+let isGameOver = false;
 let secondaryScene, secondaryCamera, secondaryRenderer;
 let topViewScene, topViewCamera, topViewRenderer;
 let player, arena, topViewPlayer, topViewArena;
@@ -150,28 +154,31 @@ function explodeBomb(bomb) {
         opacity: 0.7 
     });
     
+    // Helper function to check if explosion can propagate
+    const canPropagate = (gridX, gridZ) => {
+        if (gridX < 0 || gridX >= gridSize || gridZ < 0 || gridZ >= gridSize) {
+            return false;
+        }
+        return mazeLayout[gridZ][gridX] !== 1;
+    };
+    
     // Create explosion areas (center + cross pattern)
     const explosionCells = [];
-    const directions = [
-        [0, 0], // center
-        [1, 0], [2, 0], // right
-        [-1, 0], [-2, 0], // left
-        [0, 1], [0, 2], // down
-        [0, -1], [0, -2] // up
-    ];
-    
-    directions.forEach(([dx, dz]) => {
-        const gridX = bomb.gridX + dx;
-        const gridZ = bomb.gridZ + dz;
-        
-        // Check if within grid bounds
+
+    // Add center explosion
+    const addExplosion = (gridX, gridZ) => {
         if (gridX >= 0 && gridX < gridSize && gridZ >= 0 && gridZ < gridSize) {
-            // Check for destructible blocks (type 2 in mazeLayout)
+            // Create explosion effect
+            const worldPos = gridToWorld(gridX, gridZ);
+            const explosionMesh = new THREE.Mesh(explosionGeometry, explosionMaterial);
+            explosionMesh.position.set(worldPos.x, 0.1, worldPos.z);
+            scene.add(explosionMesh);
+            explosionCells.push(explosionMesh);
+            
+            // Check for destructible blocks (type 2) after creating explosion
             if (mazeLayout[gridZ][gridX] === 2) {
-                // Destroy the block
-                mazeLayout[gridZ][gridX] = 0;
+                mazeLayout[gridZ][gridX] = 0; // Clear the cell
                 // Remove the block mesh
-                const worldPos = gridToWorld(gridX, gridZ);
                 arena.children.forEach(child => {
                     if (child.position.x === worldPos.x && 
                         child.position.z === worldPos.z && 
@@ -179,16 +186,64 @@ function explodeBomb(bomb) {
                         arena.remove(child);
                     }
                 });
+                return false; // Stop propagation after hitting type 2 wall
+            }
+            return true; // Continue propagation
+        }
+        return false;
+    };
+    
+    // Add center explosion
+    addExplosion(bomb.gridX, bomb.gridZ);
+    
+    // Directions: right, left, down, up
+    const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    
+    // For each direction, check propagation
+    directions.forEach(([dx, dz]) => {
+        let canContinue = true;
+        for (let i = 1; i <= EXPLOSION_RANGE && canContinue; i++) {
+            const gridX = bomb.gridX + (dx * i);
+            const gridZ = bomb.gridZ + (dz * i);
+            
+            // If can't propagate further in this direction, stop
+            if (!canPropagate(gridX, gridZ)) {
+                break;
             }
             
-            // Create explosion effect
-            const worldPos = gridToWorld(gridX, gridZ);
-            const explosionMesh = new THREE.Mesh(explosionGeometry, explosionMaterial);
-            explosionMesh.position.set(worldPos.x, 0.1, worldPos.z);
-            scene.add(explosionMesh);
-            explosionCells.push(explosionMesh);
+            // Add explosion and check if we should continue
+            canContinue = addExplosion(gridX, gridZ);
         }
     });
+
+const checkPlayerDamage = () => {
+    const playerGridPos = worldToGrid(player.position.x, player.position.z);
+    
+    // Check if player is in explosion area
+    const isPlayerHit = explosionCells.some(mesh => {
+        const explosionGridPos = worldToGrid(mesh.position.x, mesh.position.z);
+        return explosionGridPos.x === playerGridPos.x && 
+               explosionGridPos.z === playerGridPos.z;
+    });
+
+    if (isPlayerHit && !isGameOver) {
+        playerLives--;
+        updateHUD();
+        
+        if (playerLives <= 0) {
+            gameOver();
+    //    } else {
+     //       // Reset player to starting position
+     //       const startPos = gridToWorld(0, 0);
+     //       player.position.set(startPos.x, 0, startPos.z);
+     //       currentGridX = 0;
+    //        currentGridZ = 0;
+        }
+    }
+};
+
+// Call checkPlayerDamage after creating explosions
+checkPlayerDamage();
     
     // Remove explosion after duration
     setTimeout(() => {
@@ -255,6 +310,19 @@ function worldToGrid(worldX, worldZ) {
         x: Math.floor((worldX + arenaSize/2) / cellSize),
         z: Math.floor((worldZ + arenaSize/2) / cellSize)
     };
+}
+
+const hudContainer = document.createElement('div');
+hudContainer.style.position = 'absolute';
+hudContainer.style.top = '10px';
+hudContainer.style.left = '10px';
+hudContainer.style.color = 'white';
+hudContainer.style.fontSize = '24px';
+hudContainer.style.fontFamily = 'Arial, sans-serif';
+gameContainer.appendChild(hudContainer);
+
+function updateHUD() {
+    hudContainer.textContent = `Lives: ${playerLives}`;
 }
 
 // inicializa jogo
@@ -412,6 +480,53 @@ function createArena() {
     createMazeBlocks();
 
     scene.add(arena);
+}
+
+function gameOver() {
+    isGameOver = true;
+    
+    // Create game over overlay
+    const gameOverDiv = document.createElement('div');
+    gameOverDiv.style.position = 'absolute';
+    gameOverDiv.style.top = '50%';
+    gameOverDiv.style.left = '50%';
+    gameOverDiv.style.transform = 'translate(-50%, -50%)';
+    gameOverDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    gameOverDiv.style.color = 'white';
+    gameOverDiv.style.padding = '20px';
+    gameOverDiv.style.borderRadius = '10px';
+    gameOverDiv.style.textAlign = 'center';
+    gameOverDiv.innerHTML = `
+        <h2>Game Over!</h2>
+        <button id="restartButton" style="padding: 10px; margin-top: 10px;">Restart</button>
+    `;
+    
+    gameContainer.appendChild(gameOverDiv);
+    
+    // Add restart button functionality
+    document.getElementById('restartButton').addEventListener('click', () => {
+        gameContainer.removeChild(gameOverDiv);
+        restartGame();
+    });
+}
+
+function restartGame() {
+    // Reset game state
+    isGameOver = false;
+    playerLives = 3;
+    
+    // Clear existing bombs and explosions
+    bombs.forEach(bomb => scene.remove(bomb.mesh));
+    bombs = [];
+    
+    // Reset player position
+    const startPos = gridToWorld(0, 0);
+    player.position.set(startPos.x, 0, startPos.z);
+    currentGridX = 0;
+    currentGridZ = 0;
+    
+    // Update HUD
+    updateHUD();
 }
 
 // criar linhas da grid no chão
@@ -614,7 +729,7 @@ function createTopViewPlayer() {
 
 // controlos de teclado - keydown
 function onKeyDown(event) {
-    if (!canMove || !gameActive) return;
+    if (!canMove || !gameActive || isGameOver) return;
 
     switch (event.code) {
 
