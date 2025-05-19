@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "compounds": [
+    {
+      "name": "Run Vite and Launch Chrome",
+      "configurations": ["Run Vite Dev Server", "Launch Chrome"]
+    }
+  ],
+  "configurations": [
+    {
+      "name": "Run Vite Dev Server",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Launch Chrome",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}"
+    }
+  ]
+}
