@@ -122,7 +122,6 @@ function switchCamera() {
         secondaryCamera.rotation.z = 0;
     }
 }
-
 // Add this function to handle bomb placement
 // Modified placeBomb function
 function placeBomb() {
@@ -418,17 +417,19 @@ camera.lookAt(0, 0, 0);
     secondaryScene = new THREE.Scene();
     secondaryScene.background = new THREE.Color(0x000000);
 
-    secondaryCamera = new THREE.OrthographicCamera(
-        -arenaSize / 2,
-        arenaSize / 2,
-        arenaSize / 2,
-        -arenaSize / 2,
-        1, 1000
-    );
+// Change in the init() function where the secondary camera is set up:
+secondaryCamera = new THREE.OrthographicCamera(
+    -arenaSize / 2,
+    arenaSize / 2,
+    arenaSize / 2,
+    -arenaSize / 2,
+    1, 1000
+);
 
-    // Set initial position for isometric view
-    secondaryCamera.position.set(arenaSize, arenaSize, arenaSize);
-    secondaryCamera.lookAt(0, 0, 0);
+// Change the initial position to top view (instead of isometric)
+secondaryCamera.position.set(0, 30, 0);
+secondaryCamera.lookAt(0, 0, 0);
+secondaryCamera.rotation.z = 0; // This ensures correct orientation for top view
 
     // Create secondary renderer
     secondaryRenderer = new THREE.WebGLRenderer({ antialias: true });
