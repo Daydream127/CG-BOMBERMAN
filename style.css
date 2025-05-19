@@ -17,7 +17,14 @@ canvas {
     background-color: rgba(0,0,0,0.5);
     padding: 10px;
     border-radius: 5px;
+    text-align: center;
 }
+
+#info img {
+    display: block;
+    margin: 15px auto 0 auto;
+}
+
 #topViewContainer {
     position: absolute;
     bottom: 20px;

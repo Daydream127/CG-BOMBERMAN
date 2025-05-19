@@ -5,14 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CG-BOMBERMAN</title>
     <link rel="stylesheet" href="style.css">
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://cdn.jsdelivr.net/npm/three@0.176.0/build/three.module.js",
-                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.176.0/examples/jsm/"
-            }
-        }
-    </script>
     <script src = "main.js" type="module"></script>
 </head>
 <body>
@@ -40,7 +32,11 @@
 
 <!-- Conteúdo do Jogo -->
 <div id="gameContainer">
-    <div id="info">Use WASD</div>
+    <div id="info">
+        Controla o bomberman com
+        <br>
+        <img src="assets/images/wasd.svg" height="50px" style="margin-top: 15px;" alt="W-A-S-D"/>
+    </div>
     <div id="topViewContainer"></div>
 </div>
 
