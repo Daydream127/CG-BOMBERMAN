@@ -44,6 +44,7 @@ function hideCredits() {
 
 // variáveis
 let scene, camera, renderer;
+let secondaryScene, secondaryCamera, secondaryRenderer;
 let topViewScene, topViewCamera, topViewRenderer;
 let player, arena, topViewPlayer, topViewArena;
 let moveForward = false;
@@ -81,14 +82,23 @@ const mazeLayout = [
 function switchCamera() {
     isTopView = !isTopView;
     if (isTopView) {
-        // Switch to top view
+        // Switch main view to top view
         camera.position.set(0, 30, 0);
         camera.lookAt(0, 0, 0);
         camera.rotation.z = 0;
+        
+        // Set secondary view to isometric
+        secondaryCamera.position.set(arenaSize, arenaSize, arenaSize);
+        secondaryCamera.lookAt(0, 0, 0);
     } else {
-        // Switch to isometric view
+        // Switch main view to isometric
         camera.position.set(arenaSize, arenaSize, arenaSize);
         camera.lookAt(0, 0, 0);
+        
+        // Set secondary view to top view
+        secondaryCamera.position.set(0, 30, 0);
+        secondaryCamera.lookAt(0, 0, 0);
+        secondaryCamera.rotation.z = 0;
     }
 }
 
@@ -295,6 +305,29 @@ camera.lookAt(0, 0, 0);
     topViewRenderer.setSize(200, 200);
     topViewRenderer.shadowMap.enabled = true;
     document.getElementById('topViewContainer').appendChild(topViewRenderer.domElement);
+
+
+    secondaryScene = new THREE.Scene();
+    secondaryScene.background = new THREE.Color(0x000000);
+
+    secondaryCamera = new THREE.OrthographicCamera(
+        -arenaSize / 2,
+        arenaSize / 2,
+        arenaSize / 2,
+        -arenaSize / 2,
+        1, 1000
+    );
+
+    // Set initial position for isometric view
+    secondaryCamera.position.set(arenaSize, arenaSize, arenaSize);
+    secondaryCamera.lookAt(0, 0, 0);
+
+    // Create secondary renderer
+    secondaryRenderer = new THREE.WebGLRenderer({ antialias: true });
+    secondaryRenderer.setSize(200, 200);
+    secondaryRenderer.shadowMap.enabled = true;
+    document.getElementById('secondaryViewContainer').appendChild(secondaryRenderer.domElement);
+
 
     // luz
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
@@ -701,9 +734,10 @@ function animate() {
 
         updatePlayerMovement();
 
-        // renderizar ambas as cenas
+        // Render all views
         renderer.render(scene, camera);
         topViewRenderer.render(topViewScene, topViewCamera);
+        secondaryRenderer.render(scene, secondaryCamera); // Add this line
     }
 }
 
