@@ -2,8 +2,7 @@ import * as THREE from 'three';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
 
-const mtlLoader = new MTLLoader();
-const objLoader = new OBJLoader();
+
 const textureLoader = new THREE.TextureLoader();
 
 let gameActive = false;
@@ -275,43 +274,48 @@ checkPlayerDamage();
 }
 
 function loadOBJModel(objPath, mtlPath, position, parentGroup) {
-    mtlLoader.load(mtlPath, function(materials) {
-            materials.preload();
+    // Criar um novo MTLLoader para cada modelo
+    const materialLoader = new MTLLoader();
+    
+    materialLoader.load(mtlPath, function(materials) {
+        materials.preload();
+        
+        // Criar um novo OBJLoader para cada modelo
+        const objectLoader = new OBJLoader();
+        objectLoader.setMaterials(materials);
+        
+        objectLoader.load(objPath,
+            // onLoad
+            function (object) {
+                object.traverse(function(child) {
+                    if (child instanceof THREE.Mesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
 
-            objLoader.setMaterials(materials);
-
-            objLoader.load(objPath,
-                // onLoad
-                function (object) {
-                    object.traverse(function(child) {
-                        if (child instanceof THREE.Mesh) {
-                            child.castShadow = true;
-                            child.receiveShadow = true;
-                        }
-                    });
-
-                    object.position.set(position.x, position.y, position.z);
-                    object.scale.set(1, 1, 1); // Ajuste a escala conforme necessário
-                    parentGroup.add(object);
-                },
-                // onProgress
-                function (xhr) {
-                    console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-                },
-                // onError
-                function (error) {
-                    console.error('Error loading OBJ:', error);
-                }
-            );
-        },
-        // onProgress
-        function (xhr) {
-            console.log((xhr.loaded / xhr.total * 100) + '% material loaded');
-        },
-        // onError
-        function (error) {
-            console.error('Error loading MTL:', error);
-        });
+                object.position.set(position.x, position.y, position.z);
+                object.scale.set(1, 1, 1);
+                parentGroup.add(object);
+            },
+            // onProgress
+            function (xhr) {
+                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+            },
+            // onError
+            function (error) {
+                console.error('Error loading OBJ:', error);
+            }
+        );
+    },
+    // onProgress
+    function (xhr) {
+        console.log((xhr.loaded / xhr.total * 100) + '% material loaded');
+    },
+    // onError
+    function (error) {
+        console.error('Error loading MTL:', error);
+    });
 }
 
 let currentGridX = 0;  // Posição inicial X na grid
