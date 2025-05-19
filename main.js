@@ -50,6 +50,7 @@ let moveForward = false;
 let moveBackward = false;
 let moveLeft = false;
 let moveRight = false;
+let isTopView = false;
 let bombs = []; // Array to store active bombs
 let explosions = []; // Array to store active explosions
 const BOMB_TIMER = 2000; // 2 seconds until explosion
@@ -76,6 +77,20 @@ const mazeLayout = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 ];
 
+// Add after other camera-related functions
+function switchCamera() {
+    isTopView = !isTopView;
+    if (isTopView) {
+        // Switch to top view
+        camera.position.set(0, 30, 0);
+        camera.lookAt(0, 0, 0);
+        camera.rotation.z = 0;
+    } else {
+        // Switch to isometric view
+        camera.position.set(arenaSize, arenaSize, arenaSize);
+        camera.lookAt(0, 0, 0);
+    }
+}
 
 // Add this function to handle bomb placement
 function placeBomb() {
@@ -239,18 +254,18 @@ function init() {
     scene.background = new THREE.Color(0x87CEEB); // azul
 
     // camera isométrica
-    const aspect = window.innerWidth / window.innerHeight;
-    camera = new THREE.OrthographicCamera(
-        -arenaSize * aspect / 2,
-        arenaSize * aspect / 2,
-        arenaSize / 2,
-        -arenaSize / 2,
-        1, 1000
-    );
+const aspect = window.innerWidth / window.innerHeight;
+camera = new THREE.OrthographicCamera(
+    -arenaSize * aspect / 2,
+    arenaSize * aspect / 2,
+    arenaSize / 2,
+    -arenaSize / 2,
+    1, 1000
+);
 
     // posicionamento da camera isométrica
-    camera.position.set(arenaSize, arenaSize, arenaSize);
-    camera.lookAt(0, 0, 0);
+camera.position.set(arenaSize, arenaSize, arenaSize);
+camera.lookAt(0, 0, 0);
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -569,6 +584,11 @@ function onKeyDown(event) {
     if (!canMove || !gameActive) return;
 
     switch (event.code) {
+
+        case 'KeyC': // Add camera switch key
+            switchCamera();
+            break;
+
         case 'Space': // Space bar - Place bomb
             placeBomb();
             break;
