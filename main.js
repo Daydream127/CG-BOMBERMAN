@@ -82,6 +82,18 @@ const mazeLayout = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 ];
 
+const availableModels = [
+    {
+        obj: '/assets/models/deer/deer.obj',
+        mtl: '/assets/models/deer/deer.mtl'
+    },
+    {
+        obj: '/assets/models/flower01/Flower01-0.obj',
+        mtl: '/assets/models/flower01/Flower01-0.mtl'
+    },
+    // Add more model paths here as needed
+];
+
 // Add after other camera-related functions
 function switchCamera() {
     isTopView = !isTopView;
@@ -569,11 +581,13 @@ function createMazeBlocks() {
                 block.receiveShadow = true;
                 arena.add(block);
             }
-            else if (mazeLayout[z][x] === 2) { // teste obj/mtl
+            else if (mazeLayout[z][x] === 2) {
                 const worldPos = gridToWorld(x, z);
+                // Get random model from available models
+                const randomModel = availableModels[Math.floor(Math.random() * availableModels.length)];
                 loadOBJModel(
-                    '/assets/models/deer/deer.obj',
-                    '/assets/models/deer/deer.mtl',
+                    randomModel.obj,
+                    randomModel.mtl,
                     { x: worldPos.x, y: 0, z: worldPos.z },
                     arena
                 );
