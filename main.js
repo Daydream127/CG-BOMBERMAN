@@ -55,7 +55,6 @@ let explosions = []; // Array to store active explosions
 const BOMB_TIMER = 2000; // 2 seconds until explosion
 const EXPLOSION_DURATION = 1000; // 1 second explosion duration
 const EXPLOSION_RANGE = 2; // How far the explosion reaches
-const playerSpeed = 1.0; // Velocidade ajustada para movimentação por casas
 let canMove = true;
 const playerSpeed = 1.0;
 const arenaSize = 20;
