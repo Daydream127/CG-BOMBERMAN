@@ -130,17 +130,22 @@ function placeBomb() {
 
     const worldPos = gridToWorld(currentGridX, currentGridZ);
     
-    // Create bomb mesh
-    const bombGeometry = new THREE.SphereGeometry(0.3, 8, 8);
-    const bombMaterial = new THREE.MeshPhongMaterial({ color: 0x000000 });
-    const bombMesh = new THREE.Mesh(bombGeometry, bombMaterial);
+    // Create a Group to hold the bomb model
+    const bombGroup = new THREE.Group();
+    bombGroup.position.set(worldPos.x, 0, worldPos.z);
+    scene.add(bombGroup);
     
-    bombMesh.position.set(worldPos.x, 0.3, worldPos.z);
-    scene.add(bombMesh);
+    // Load the bomb model
+    loadOBJModel(
+        '/assets/models/bomb/bomb.obj',
+        '/assets/models/bomb/bomb.mtl',
+        { x: 0, y: 0, z: 0 },
+        bombGroup
+    );
     
     // Add bomb to tracking array
     const bomb = {
-        mesh: bombMesh,
+        mesh: bombGroup,
         gridX: currentGridX,
         gridZ: currentGridZ,
         timer: Date.now(),
