@@ -259,17 +259,19 @@ const checkPlayerDamage = () => {
     });
 
     if (isPlayerHit && !isGameOver) {
+        // Play damage sound
+        if (damageSound) {
+            const sound = new THREE.Audio(listener);
+            sound.setBuffer(damageSound);
+            sound.setVolume(0.5); // Adjust volume as needed
+            sound.play();
+        }
+
         playerLives--;
         updateHUD();
         
         if (playerLives <= 0) {
             gameOver();
-    //    } else {
-     //       // Reset player to starting position
-     //       const startPos = gridToWorld(0, 0);
-     //       player.position.set(startPos.x, 0, startPos.z);
-     //       currentGridX = 0;
-    //        currentGridZ = 0;
         }
     }
 };
@@ -523,11 +525,16 @@ function createArena() {
 const audioLoader = new THREE.AudioLoader();
 const listener = new THREE.AudioListener();
 let bombSound;
+let damageSound;
+
 
 // Add this after textureLoader initialization
 // Load bomb sound
 audioLoader.load('assets/sounds/bomba.wav', function(buffer) {
     bombSound = buffer;
+});
+audioLoader.load('assets/sounds/damage.wav', function(buffer) {
+    damageSound = buffer;
 });
 
 
