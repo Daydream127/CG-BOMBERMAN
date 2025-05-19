@@ -45,6 +45,10 @@ function hideCredits() {
 }
 
 // variáveis
+const arenaSize = 30;
+const wallHeight = 2;
+const gridSize = 15; // 10*10
+const cellSize = arenaSize / gridSize; // tamanho de cada célula
 let scene, camera, renderer;
 let playerLives = 3;
 let isGameOver = false;
@@ -63,23 +67,25 @@ const EXPLOSION_DURATION = 1000; // 1 second explosion duration
 const EXPLOSION_RANGE = 2; // How far the explosion reaches
 let canMove = true;
 const playerSpeed = 1.0;
-const arenaSize = 20;
-const wallHeight = 2;
-const gridSize = 10; // 10*10
-const cellSize = arenaSize / gridSize; // tamanho de cada célula
+
 
 // Matriz do labirinto: 0 = caminho livre, 1 = parede/obstáculo, 2 = voxel
 const mazeLayout = [
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 1, 2, 0, 0, 1, 1, 1, 0],
-    [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-    [0, 1, 0, 1, 1, 1, 1, 0, 1, 0],
-    [0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
-    [0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
-    [0, 1, 0, 1, 1, 1, 1, 0, 1, 0],
-    [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-    [0, 1, 1, 1, 0, 0, 1, 1, 1, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 1, 2, 0, 0, 1, 1, 1, 0, 1, 1, 2, 1, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
+    [0, 2, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 2, 0],
+    [0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0],
+    [0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0],
+    [0, 1, 0, 1, 1, 0, 0, 2, 0, 0, 1, 0, 0, 1, 0],
+    [0, 2, 0, 0, 1, 2, 1, 1, 1, 2, 1, 1, 0, 2, 0],
+    [0, 1, 0, 0, 1, 0, 0, 2, 0, 0, 1, 0, 0, 1, 0],
+    [0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0],
+    [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0],
+    [0, 2, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 2, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
+    [0, 1, 1, 2, 0, 0, 1, 1, 1, 0, 1, 1, 2, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 ];
 
 const availableModels = [
