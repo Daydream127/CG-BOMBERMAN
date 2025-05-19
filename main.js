@@ -124,6 +124,7 @@ function switchCamera() {
 }
 
 // Add this function to handle bomb placement
+// Modified placeBomb function
 function placeBomb() {
     // Check if player's current position already has a bomb
     const existingBomb = bombs.find(bomb => 
@@ -131,7 +132,15 @@ function placeBomb() {
         bomb.gridZ === currentGridZ
     );
     
-    if (existingBomb) return; // Don't place if there's already a bomb here
+    if (existingBomb) return;
+
+    // Play bomb sound
+    if (bombSound) {
+        const sound = new THREE.Audio(listener);
+        sound.setBuffer(bombSound);
+        sound.setVolume(0.5); // Adjust volume as needed
+        sound.play();
+    }
 
     const worldPos = gridToWorld(currentGridX, currentGridZ);
     
@@ -140,6 +149,7 @@ function placeBomb() {
     bombGroup.position.set(worldPos.x, 0, worldPos.z);
     scene.add(bombGroup);
     
+
     // Load the bomb model
     loadOBJModel(
         '/assets/models/bomb/bomb.obj',
@@ -369,6 +379,7 @@ camera = new THREE.OrthographicCamera(
 );
 
     // posicionamento da camera isométrica
+    camera.add(listener);
 camera.position.set(arenaSize, arenaSize, arenaSize);
 camera.lookAt(0, 0, 0);
 
@@ -508,6 +519,17 @@ function createArena() {
 
     scene.add(arena);
 }
+// Add after other imports
+const audioLoader = new THREE.AudioLoader();
+const listener = new THREE.AudioListener();
+let bombSound;
+
+// Add this after textureLoader initialization
+// Load bomb sound
+audioLoader.load('assets/sounds/bomba.wav', function(buffer) {
+    bombSound = buffer;
+});
+
 
 function gameOver() {
     isGameOver = true;
