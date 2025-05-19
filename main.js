@@ -49,6 +49,11 @@ let moveBackward = false;
 let moveLeft = false;
 let moveRight = false;
 let canMove = true; // Controle para movimentação por casas
+let bombs = []; // Array to store active bombs
+let explosions = []; // Array to store active explosions
+const BOMB_TIMER = 2000; // 2 seconds until explosion
+const EXPLOSION_DURATION = 1000; // 1 second explosion duration
+const EXPLOSION_RANGE = 2; // How far the explosion reaches
 const playerSpeed = 1.0; // Velocidade ajustada para movimentação por casas
 const arenaSize = 20;
 const wallHeight = 2;
@@ -72,6 +77,103 @@ const mazeLayout = [
 // Criar os loaders
 const mtlLoader = new MTLLoader();
 const objLoader = new OBJLoader();
+
+// Add this function to handle bomb placement
+function placeBomb() {
+    // Check if player's current position already has a bomb
+    const existingBomb = bombs.find(bomb => 
+        bomb.gridX === currentGridX && 
+        bomb.gridZ === currentGridZ
+    );
+    
+    if (existingBomb) return; // Don't place if there's already a bomb here
+
+    const worldPos = gridToWorld(currentGridX, currentGridZ);
+    
+    // Create bomb mesh
+    const bombGeometry = new THREE.SphereGeometry(0.3, 8, 8);
+    const bombMaterial = new THREE.MeshPhongMaterial({ color: 0x000000 });
+    const bombMesh = new THREE.Mesh(bombGeometry, bombMaterial);
+    
+    bombMesh.position.set(worldPos.x, 0.3, worldPos.z);
+    scene.add(bombMesh);
+    
+    // Add bomb to tracking array
+    const bomb = {
+        mesh: bombMesh,
+        gridX: currentGridX,
+        gridZ: currentGridZ,
+        timer: Date.now(),
+    };
+    
+    bombs.push(bomb);
+    
+    // Set timer for explosion
+    setTimeout(() => explodeBomb(bomb), BOMB_TIMER);
+}
+
+// Add this function to handle bomb explosions
+function explodeBomb(bomb) {
+    // Remove bomb mesh
+    scene.remove(bomb.mesh);
+    bombs = bombs.filter(b => b !== bomb);
+    
+    // Create explosion visuals
+    const explosionGeometry = new THREE.BoxGeometry(cellSize, 0.1, cellSize);
+    const explosionMaterial = new THREE.MeshPhongMaterial({ 
+        color: 0xff0000,
+        transparent: true,
+        opacity: 0.7 
+    });
+    
+    // Create explosion areas (center + cross pattern)
+    const explosionCells = [];
+    const directions = [
+        [0, 0], // center
+        [1, 0], [2, 0], // right
+        [-1, 0], [-2, 0], // left
+        [0, 1], [0, 2], // down
+        [0, -1], [0, -2] // up
+    ];
+    
+    directions.forEach(([dx, dz]) => {
+        const gridX = bomb.gridX + dx;
+        const gridZ = bomb.gridZ + dz;
+        
+        // Check if within grid bounds
+        if (gridX >= 0 && gridX < gridSize && gridZ >= 0 && gridZ < gridSize) {
+            // Check for destructible blocks (type 2 in mazeLayout)
+            if (mazeLayout[gridZ][gridX] === 2) {
+                // Destroy the block
+                mazeLayout[gridZ][gridX] = 0;
+                // Remove the block mesh
+                const worldPos = gridToWorld(gridX, gridZ);
+                arena.children.forEach(child => {
+                    if (child.position.x === worldPos.x && 
+                        child.position.z === worldPos.z && 
+                        child instanceof THREE.Group) {
+                        arena.remove(child);
+                    }
+                });
+            }
+            
+            // Create explosion effect
+            const worldPos = gridToWorld(gridX, gridZ);
+            const explosionMesh = new THREE.Mesh(explosionGeometry, explosionMaterial);
+            explosionMesh.position.set(worldPos.x, 0.1, worldPos.z);
+            scene.add(explosionMesh);
+            explosionCells.push(explosionMesh);
+        }
+    });
+    
+    // Remove explosion after duration
+    setTimeout(() => {
+        explosionCells.forEach(mesh => scene.remove(mesh));
+    }, EXPLOSION_DURATION);
+}
+
+// Add to the onKeyDown function, inside the if (!canMove || !gameActive) check
+
 
 // Function to load and add an .obj model with materials
 function loadOBJModel(objPath, mtlPath, position, parentGroup) {
@@ -494,6 +596,11 @@ function onKeyDown(event) {
     if (!canMove || !gameActive) return;
 
     switch (event.code) {
+                
+        case 'Space': // Space bar - Place bomb
+            placeBomb();
+            break;
+    
         case 'KeyW': // W
             if (canMoveToCell(currentGridX, currentGridZ - 1)) {
                 moveForward = true;
@@ -596,6 +703,11 @@ function animate() {
     requestAnimationFrame(animate);
 
     if (gameActive) {
+                const currentTime = Date.now();
+        bombs.forEach(bomb => {
+            const scale = 1 + 0.1 * Math.sin((currentTime - bomb.timer) / 200);
+            bomb.mesh.scale.set(scale, scale, scale);
+        });
         // Atualizar movimento do jogador baseado no sistema de grade
         updatePlayerMovement();
 
