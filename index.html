@@ -3,16 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CG-BOMBERMAN</title>
+    <title>BOMBOCLAT</title>
     <link rel="stylesheet" href="style.css">
     <script src = "main.js" type="module"></script>
 </head>
 <body>
-<!-- Menu Principal -->
+    <img id="background" src="backgrounds/8-bit-graphics-pixels-scene-with-forest.jpg" alt="Background Image" style="width: 100%; height: 100%; position: absolute; z-index: -1;">
+    <!-- Menu Principal -->
+
+
 <div id="menuContainer">
-    <h1 id="gameTitle">BOMBERMAN 3D</h1>
-    <button class="menuButton" id="playButton">JOGAR</button>
-    <button class="menuButton" id="creditsButton">CRÉDITOS</button>
+         <div id="logoWrapper">
+        <img id="logo" src="assets/images/logo.svg" alt="Logo"/>    
+    </div>
+    <div style="height: 100px;"></div>
+    <div id="buttonGroup">
+        <button class="menuButton" id="playButton">JOGAR</button>
+        <button class="menuButton" id="optionsButton">OPÇÕES</button>
+        <button class="menuButton" id="creditsButton">CRÉDITOS</button>
+        <button class="menuButton" id="exitButton">SAIR</button>
+    </div>
 </div>
 
 <!-- Tela de Créditos -->
