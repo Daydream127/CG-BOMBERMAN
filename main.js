@@ -860,37 +860,30 @@ function animate() {
 function updatePlayerMovement() {
     if (!canMove) {
         const targetPos = gridToWorld(targetGridX, targetGridZ);
+        const moveSpeed = 0.03; // Ajuste este valor para controlar a velocidade do deslizamento
 
-        // movimento suave entre as células
+        // Calcula a direção do movimento
         const dx = targetPos.x - player.position.x;
         const dz = targetPos.z - player.position.z;
 
-        // determinar se chegou próximo o suficiente à posição de destino
-        if (Math.abs(dx) < 0.1 && Math.abs(dz) < 0.1) {
-            // chegou à posição exata da célula alvo
+        // Calcula a distância até o destino
+        const distance = Math.sqrt(dx * dx + dz * dz);
+
+        if (distance < 0.1) {
+            // Chegou ao destino
             player.position.x = targetPos.x;
             player.position.z = targetPos.z;
-
-            // atualizar posição atual na grade
             currentGridX = targetGridX;
             currentGridZ = targetGridZ;
-
-            // resetar variáveis de movimento
-            moveForward = false;
-            moveBackward = false;
-            moveLeft = false;
-            moveRight = false;
-
-            // permitir novo movimento
+            moveForward = moveBackward = moveLeft = moveRight = false;
             canMove = true;
         } else {
-            // mover na direção do alvo
-            player.position.x += Math.sign(dx) * Math.min(playerSpeed, Math.abs(dx));
-            player.position.z += Math.sign(dz) * Math.min(playerSpeed, Math.abs(dz));
+            // Move o jogador gradualmente em direção ao destino
+            player.position.x += (dx / distance) * moveSpeed;
+            player.position.z += (dz / distance) * moveSpeed;
         }
     }
 
-    // atualizar a posição do jogador na visão de topo
     updateTopViewPlayer();
 }
 
