@@ -1,7 +1,13 @@
+@font-face {
+    font-family: 'Alphbeta'; /* Nome que você quer dar à fonte */
+    src: url('assets/fonts/alphbeta.ttf') format('truetype'); /* Caminho para o arquivo .ttf */
+    font-weight: normal; /* Peso da fonte (opcional) */
+    font-style: normal; /* Estilo (normal, itálico, etc.) */
+}
+
 body {
     margin: 0;
     overflow: hidden;
-    background-color: #000;
     font-family: 'Arial', sans-serif;
 }
 canvas {
@@ -14,15 +20,27 @@ canvas {
     color: white;
     font-family: monospace;
     font-size: 14px;
-    background-color: rgba(0,0,0,0.5);
     padding: 10px;
     border-radius: 5px;
     text-align: center;
 }
 
-#info img {
-    display: block;
-    margin: 15px auto 0 auto;
+
+#logoWrapper {
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* centraliza perfeitamente */
+    padding: 30px;
+    border-radius: 20px;
+    z-index: 1;
+    text-align: center;
+}
+
+#logo {
+    width: 700px;
+    height: auto;
+    filter: drop-shadow(0 0 30px rgb(234, 234, 234));
 }
 
 #topViewContainer {
@@ -47,33 +65,38 @@ canvas {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(0, 0, 0, 0.45);
     z-index: 100;
 }
-#gameTitle {
-    font-size: 4em;
-    color: #ff6600;
-    text-shadow: 0 0 10px #ff9933, 0 0 20px #ffcc00;
-    margin-bottom: 50px;
-    font-weight: bold;
+
+
+#buttonGroup {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 colunas */
+    grid-template-rows: repeat(2, 1fr);    /* 2 linhas */
+    gap: 10px 20px; /* Espaço entre os botões */
+    margin:150px 0 10px 0; /* Margem superior/inferior */
 }
+
 .menuButton {
-    background-color: #ff6600;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 15px 50px;
-    margin: 10px;
+    background-color: #3c9c5d;     /* verde-folha */
+    color: #fdfae0;                /* bege claro estilo papel antigo */
+    border: 3px solid #2b6e44;     /* contorno mais escuro */
+    border-radius: 0;              /* sem arredondar → mais “pixelado” */
+    padding: 15px 40px;
+    font-family: 'Alphbeta', sans-serif; /* Usando a fonte personalizada */
     font-size: 1.5em;
     cursor: pointer;
-    transition: all 0.3s;
-    width: 200px;
+    transition: all 0.2s;
+    box-shadow: 4px 4px 0 #2b6e44; /* sombra estilo pixel */
+    width: 220px;
     text-align: center;
+    margin: 10px 0;
 }
 .menuButton:hover {
-    background-color: #ff9933;
-    transform: scale(1.05);
-    box-shadow: 0 0 15px #ffcc00;
+    background-color: #ff8f00;
+    border: 3px solid #c30500;
+    box-shadow: 4px 4px 0 #c30500;
 }
 #creditsContainer {
     position: absolute;
