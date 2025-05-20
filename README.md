@@ -1,10 +1,14 @@
 <div align="center">
-  <img height="200" src="https://github.com/user-attachments/assets/9f4a1111-a791-4350-94b5-e29dd4cd5035">  
+  <img src="https://github.com/user-attachments/assets/758ebeaf-f40b-427b-9aba-7c1d9bed28f8">  
 </div>
 
 ---
 
-# CG-BOMBERMAN
+> [!IMPORTANT]
+> Este projeto foi desenvolvido para ser utilizado com Node.js; usar a função Go Live do Visual Studio Code pode causar erros. <br>
+> Para executar o jogo, instale primeiro as dependências necessárias utilizando o comando `npm install` no diretório do projeto e, em seguida, execute-o com `npm run dev`; isso iniciará o servidor no endereço http://localhost:5173/.
+
+---
 
 O nosso grupo propõe desenvolver um remake 3D do clássico jogo de arcade Bomberman através da biblioteca Three.js. O jogo manterá os elementos essenciais da jogabilidade original enquanto demonstrará conceitos avançados de computação gráfica.
 
