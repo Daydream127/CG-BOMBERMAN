@@ -1,9 +1,16 @@
+<div align="center">
+  <img height="200" src="https://github.com/user-attachments/assets/9f4a1111-a791-4350-94b5-e29dd4cd5035">  
+</div>
+
+---
+
 # CG-BOMBERMAN
-       O nosso grupo propõe desenvolver um remake 3D do clássico jogo de arcade Bomberman através da biblioteca Three.js. O jogo manterá os elementos essenciais da jogabilidade original enquanto demonstrará conceitos avançados de computação gráfica.
+
+O nosso grupo propõe desenvolver um remake 3D do clássico jogo de arcade Bomberman através da biblioteca Three.js. O jogo manterá os elementos essenciais da jogabilidade original enquanto demonstrará conceitos avançados de computação gráfica.
 
 Aplicações Semelhantes
 
-1.        Bomb It (Versão 3D de Bomberman)
+1. Bomb It (Versão 3D de Bomberman)
 
 Descrição: Bomb It é uma série de jogos inspirados em Bomberman, mas com visão 3D e gráficos modernos.
 Semelhanças:
@@ -15,7 +22,7 @@ o   Inimigos controlados por IA (opcional para o trabalho).
 
 o   Efeitos visuais (iluminação, partículas de explosão).
 
-2.        3D Multiplayer Bomberman (Babylon.js)
+2. 3D Multiplayer Bomberman (Babylon.js)
 
 Descrição: Uma versão multiplayer de Bomberman feita em Babylon.js (similar a Three.js).
 Semelhanças:
@@ -25,7 +32,7 @@ o   Sistema de bombas, power-ups e destruição de blocos.
 
 o   Iluminação dinâmica (útil para o requisito de luzes do projeto).
 
-3.        Dynablaster
+3. Dynablaster
 
 ·        Descrição: Dynablaster é o nome usado para o jogo Bomberman lançado na Europa, principalmente em computadores como Amiga, MS-DOS, Atari ST e Amstrad CPC, além de consoles como o TurboGrafx-16 (sob o nome original).
 
@@ -39,7 +46,7 @@ o   Modos de jogo: Clássico "versus" e cooperativo, útil como referência para
 
 o   Estilo retro: Inspiração para texturas pixeladas ou uma estética "low-poly 3D" nostálgica.
 
-4.        Bombermine
+4. Bombermine
 
 ·        Descrição: Bombermine foi um jogo online massivo inspirado em Bomberman, com foco em multiplayer em larga escala. Ele permitia até 1000 jogadores simultâneos em mapas gigantescos, com mecânicas clássicas de bombas e destruição de blocos, mas em um ambiente 2D.
 
