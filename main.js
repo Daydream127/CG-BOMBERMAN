@@ -96,6 +96,8 @@ const availableModels = [
         mtl: '/assets/models/caixacorreio/caixacorreio.mtl'
     },
 ];
+ 
+
 
 function switchCamera() {
     isTopView = !isTopView;
