@@ -19,6 +19,10 @@ creditsButton.addEventListener('click', showCredits);
 backButton.addEventListener('click', hideCredits);
 
 function startGame() {
+    const mapSelect = document.getElementById('mapSelect');
+    currentMap = mapSelect.value;
+    mazeLayout = GAME_MAPS[currentMap];
+    
     menuContainer.style.display = 'none';
     gameContainer.style.display = 'block';
     gameActive = true;
@@ -96,45 +100,131 @@ let playerSpeed2 = 1.0;
 const playerSpeed = 1.0;
 
 
-const mazeLayout = [
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0],
-    [0, 1, 1, 2, 0, 0, 1, 1, 1, 0, 1, 1, 2, 1, 0],
-    [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
-    [0, 2, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 2, 0],
-    [0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0],
-    [0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0],
-    [0, 1, 0, 1, 1, 0, 0, 2, 0, 0, 1, 0, 0, 1, 0],
-    [0, 2, 0, 0, 1, 2, 1, 1, 1, 2, 1, 1, 0, 2, 0],
-    [0, 1, 0, 0, 1, 0, 0, 2, 0, 0, 1, 0, 0, 1, 0],
-    [0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0],
-    [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0],
-    [0, 2, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 2, 0],
-    [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
-    [0, 1, 1, 2, 0, 0, 1, 1, 1, 0, 1, 1, 2, 1, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-];
+const GAME_MAPS = {
+    classic: [
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0],
+        [0, 1, 1, 2, 0, 0, 1, 1, 1, 0, 1, 1, 2, 1, 0],
+        [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
+        [0, 2, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 2, 0],
+        [0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0],
+        [0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0],
+        [0, 1, 0, 1, 1, 0, 0, 2, 0, 0, 1, 0, 0, 1, 0],
+        [0, 2, 0, 0, 1, 2, 1, 1, 1, 2, 1, 1, 0, 2, 0],
+        [0, 1, 0, 0, 1, 0, 0, 2, 0, 0, 1, 0, 0, 1, 0],
+        [0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0],
+        [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0],
+        [0, 2, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 2, 0],
+        [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
+        [0, 1, 1, 2, 0, 0, 1, 1, 1, 0, 1, 1, 2, 1, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    maze: [
+        [0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0],
+        [0, 1, 0, 1, 0, 2, 0, 1, 0, 2, 0, 1, 0, 1, 0],
+        [0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0],
+        [0, 1, 1, 2, 0, 0, 0, 2, 0, 0, 0, 2, 1, 1, 0],
+        [0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0],
+        [1, 2, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 2, 1],
+        [0, 0, 0, 0, 1, 0, 3, 2, 3, 0, 1, 0, 0, 0, 0],
+        [0, 1, 1, 2, 0, 0, 2, 1, 2, 0, 0, 2, 1, 1, 0],
+        [0, 0, 0, 0, 1, 0, 3, 2, 3, 0, 1, 0, 0, 0, 0],
+        [1, 2, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 2, 1],
+        [0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0],
+        [0, 1, 1, 2, 0, 0, 0, 2, 0, 0, 0, 2, 1, 1, 0],
+        [0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0],
+        [0, 1, 0, 1, 0, 2, 0, 1, 0, 2, 0, 1, 0, 1, 0],
+        [0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0]
+    ],
+    arena: [
+        [1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 1],
+        [1, 0, 1, 0, 1, 0, 1, 2, 1, 0, 1, 0, 1, 0, 1],
+        [1, 2, 0, 2, 0, 2, 0, 0, 0, 2, 0, 2, 0, 2, 1],
+        [1, 0, 1, 0, 1, 0, 1, 2, 1, 0, 1, 0, 1, 0, 1],
+        [1, 0, 0, 2, 0, 2, 0, 0, 0, 2, 0, 2, 0, 0, 1],
+        [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+        [0, 0, 2, 0, 2, 0, 0, 3, 0, 0, 2, 0, 2, 0, 0],
+        [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+        [1, 0, 0, 2, 0, 2, 0, 0, 0, 2, 0, 2, 0, 0, 1],
+        [1, 0, 1, 0, 1, 0, 1, 2, 1, 0, 1, 0, 1, 0, 1],
+        [1, 2, 0, 2, 0, 2, 0, 0, 0, 2, 0, 2, 0, 2, 1],
+        [1, 0, 1, 0, 1, 0, 1, 2, 1, 0, 1, 0, 1, 0, 1],
+        [1, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1]
+    ]
+};
 
-const availableModels = [
-    {
-        obj: '/assets/models/deer/deer.obj',
-        mtl: '/assets/models/deer/deer.mtl'
-    },
-    {
-        obj: '/assets/models/flower01/Flower01-0.obj',
-        mtl: '/assets/models/flower01/Flower01-0.mtl'
-    },
-        {
-        obj: '/assets/models/caixacorreio/caixacorreio.obj',
-        mtl: '/assets/models/caixacorreio/caixacorreio.mtl'
-    },
-];
+let currentMap = 'classic';
+let mazeLayout = GAME_MAPS[currentMap];
 
-const powerUpModels = [
-    {
-        obj: '/assets/models/CreamPie/CreamPie.obj',
-        mtl: '/assets/models/Creampie/CreamPie.mtl'
+const MAP_MODELS = {
+    classic: {
+        destructible: [
+            {
+                obj: '/assets/models/flower01/Flower01-0.obj',
+                mtl: '/assets/models/flower01/Flower01-0.mtl'
+            },
+            {
+                obj: '/assets/models/deer/deer.obj',
+                mtl: '/assets/models/deer/deer.mtl'
+            }
+        ],
+        powerUps: [
+            {
+                obj: '/assets/models/CreamPie/CreamPie.obj',
+                mtl: '/assets/models/CreamPie/CreamPie.mtl'
+            }
+        ],
+        rat: {
+            obj: '/assets/models/rat/rat.obj',
+            mtl: '/assets/models/rat/rat.mtl'
+        }
     },
-];
+    maze: {
+        destructible: [
+            {
+                obj: '/assets/models/flower01/Flower01-0.obj',
+                mtl: '/assets/models/flower01/Flower01-0.mtl'
+            },
+            {
+                obj: '/assets/models/flower01/Flower01-0.obj',
+                mtl: '/assets/models/flower01/Flower01-0.mtl'
+            }
+        ],
+        powerUps: [
+            {
+                obj: '/assets/models/CreamPie/CreamPie.obj',
+                mtl: '/assets/models/CreamPie/CreamPie.mtl'
+            }
+        ],
+        rat: {
+                obj: '/assets/models/deer/deer.obj',
+                mtl: '/assets/models/deer/deer.mtl'
+        }
+    },
+    arena: {
+        destructible: [
+            {
+                obj: '/assets/models/caixacorreio/caixacorreio.obj',
+                mtl: '/assets/models/caixacorreio/caixacorreio.mtl'
+            },
+            {
+                obj: '/assets/models/tree/tree.obj',
+                mtl: '/assets/models/tree/tree.mtl'
+            }
+        ],
+        powerUps: [
+            {
+                obj: '/assets/models/CreamPie/CreamPie.obj',
+                mtl: '/assets/models/CreamPie/CreamPie.mtl'
+            }
+        ],
+        rat: {
+            obj: '/assets/models/robot/robot.obj',
+            mtl: '/assets/models/robot/robot.mtl'
+        }
+    }
+};
 
 
  
@@ -269,30 +359,29 @@ if (mazeLayout[gridZ][gridX] === 2) {
             arena.remove(child);
             
             // deixar a 1 para teste
-            if (Math.random() < 1) {
-                const randomPowerUp = powerUpModels[Math.floor(Math.random() * powerUpModels.length)];
-                const powerUpGroup = new THREE.Group();
-                powerUpGroup.position.set(worldPos.x, wallHeight/2, worldPos.z);
-                
-                // Adiciona uma propriedade para identificar como power-up
-                powerUpGroup.userData.isPowerUp = true;
-                
-                loadOBJModel(
-                    randomPowerUp.obj,
-                    randomPowerUp.mtl,
-                    { x: 0, y: 0, z: 0 },
-                    powerUpGroup
-                );
-                
-                // Adiciona animação flutuante
-                const initialY = powerUpGroup.position.y;
-                powerUpGroup.userData.floatAnimation = {
-                    initialY: initialY,
-                    offset: 0
-                };
-                
-                arena.add(powerUpGroup);
-            }
+if (Math.random() < 1) {
+    const mapPowerUps = MAP_MODELS[currentMap].powerUps;
+    const randomPowerUp = mapPowerUps[Math.floor(Math.random() * mapPowerUps.length)];
+    const powerUpGroup = new THREE.Group();
+    powerUpGroup.position.set(worldPos.x, wallHeight/2, worldPos.z);
+    
+    powerUpGroup.userData.isPowerUp = true;
+    
+    loadOBJModel(
+        randomPowerUp.obj,
+        randomPowerUp.mtl,
+        { x: 0, y: 0, z: 0 },
+        powerUpGroup
+    );
+    
+    const initialY = powerUpGroup.position.y;
+    powerUpGroup.userData.floatAnimation = {
+        initialY: initialY,
+        offset: 0
+    };
+    
+    arena.add(powerUpGroup);
+}
         }
     });
     return false;
@@ -387,8 +476,15 @@ function loadOBJModel(objPath, mtlPath, position, parentGroup) {
                     }
                 });
 
+                // Ajuste a escala com base no mapa atual
+                let scale = 1;
+                if (objPath.includes('spider')) scale = 0.5;
+                if (objPath.includes('robot')) scale = 0.8;
+                if (objPath.includes('barrel')) scale = 0.7;
+                // Adicione mais ajustes conforme necessário
+
                 object.position.set(position.x, position.y, position.z);
-                object.scale.set(1, 1, 1);
+                object.scale.set(scale, scale, scale);
                 parentGroup.add(object);
             },
             function (xhr) {
@@ -398,12 +494,6 @@ function loadOBJModel(objPath, mtlPath, position, parentGroup) {
                 console.error('Error loading OBJ:', error);
             }
         );
-    },
-    function (xhr) {
-        console.log((xhr.loaded / xhr.total * 100) + '% material loaded');
-    },
-    function (error) {
-        console.error('Error loading MTL:', error);
     });
 }
 
@@ -687,18 +777,29 @@ function gameOver() {
 }
 
 function restartGame() {
-    isGameOver = false;
-    playerLives = 3;
+    // Limpar a cena
+    while(scene.children.length > 0) { 
+        scene.remove(scene.children[0]); 
+    }
     
-    bombs.forEach(bomb => scene.remove(bomb.mesh));
+    // Resetar variáveis
     bombs = [];
-    
-    const startPos = gridToWorld(0, 0);
-    player.position.set(startPos.x, 0, startPos.z);
+    explosions = [];
+    rats = [];
     currentGridX = 0;
     currentGridZ = 0;
+    targetGridX = 0;
+    targetGridZ = 0;
+    canMove = true;
+    playerSpeed2 = 1.0;
+    isSpeedBoosted = false;
     
-    updateHUD();
+    if (speedBoostTimeout) {
+        clearTimeout(speedBoostTimeout);
+    }
+    
+    // Reiniciar o jogo
+    init();
 }
 
 function createGrid() {
@@ -739,17 +840,17 @@ function createMazeBlocks() {
             }
             else if (mazeLayout[z][x] === 2) {
                 const worldPos = gridToWorld(x, z);
-                const randomModel = availableModels[Math.floor(Math.random() * availableModels.length)];
+                const mapModels = MAP_MODELS[currentMap].destructible;
+                const randomModel = mapModels[Math.floor(Math.random() * mapModels.length)];
                 
-                // Criar um grupo para o modelo e ajustar sua posição Y
                 const modelGroup = new THREE.Group();
-                modelGroup.position.set(worldPos.x, wallHeight/2, worldPos.z); // Ajuste o Y para wallHeight/2
+                modelGroup.position.set(worldPos.x, wallHeight/2, worldPos.z);
                 arena.add(modelGroup);
                 
                 loadOBJModel(
                     randomModel.obj,
                     randomModel.mtl,
-                    { x: 0, y: 0, z: 0 }, // Posição local dentro do grupo
+                    { x: 0, y: 0, z: 0 },
                     modelGroup
                 );
             }
@@ -798,9 +899,10 @@ function createRat(gridX, gridZ) {
     const ratGroup = new THREE.Group();
     ratGroup.position.set(worldPos.x, 0, worldPos.z);
     
+    const ratModel = MAP_MODELS[currentMap].rat;
     loadOBJModel(
-        '/assets/models/rat/rat.obj',
-        '/assets/models/rat/rat.mtl',
+        ratModel.obj,
+        ratModel.mtl,
         { x: 0, y: 0, z: 0 },
         ratGroup
     );
@@ -815,7 +917,7 @@ function createRat(gridX, gridZ) {
         targetGridZ: gridZ,
         isMoving: false,
         rotation: 0,
-        lastKnownPlayerPos: null,  // Nova propriedade
+        lastKnownPlayerPos: null,
         isChasing: false,
         lastDamageTime: 0
     };
@@ -1558,7 +1660,7 @@ function applyPowerUpEffect() {
             speedBoostTimeout = setTimeout(() => {
                 isSpeedBoosted = false;
                 playerSpeed2 = 1.0;
-                showFloatingText('VELOCIDADE NORMAL', 0xffff00);
+                showFloatingText('VELOCIDADE -', 0xffff00);
             }, SPEED_BOOST_DURATION);
             break;
     }
