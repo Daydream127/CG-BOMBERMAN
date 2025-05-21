@@ -72,7 +72,7 @@ let currentRotationY = 0;
 const rotationSmoothing = 0.1;
 const maxVerticalRotation = Math.PI / 2;
 
-const RAT_MOVE_INTERVAL = 2000;
+const RAT_MOVE_INTERVAL = 1000;
 const MOVEMENT_DURATION = 500; // Mais rápido, estilo Minecraft
 const LIMB_ROTATION = Math.PI / 4;
 let moveForward = false;
@@ -759,33 +759,83 @@ function initializeRats() {
     setInterval(moveRats, RAT_MOVE_INTERVAL);
 }
 
+function hasLineOfSight(ratGridX, ratGridZ, playerGridX, playerGridZ) {
+    // Se não estiver na mesma linha ou coluna, não há linha de visão
+    if (ratGridX !== playerGridX && ratGridZ !== playerGridZ) {
+        return false;
+    }
+
+    // Verifica a direção
+    const dx = Math.sign(playerGridX - ratGridX);
+    const dz = Math.sign(playerGridZ - ratGridZ);
+    
+    // Verifica cada célula entre o rato e o jogador
+    let x = ratGridX;
+    let z = ratGridZ;
+    
+    while (x !== playerGridX || z !== playerGridZ) {
+        x += dx;
+        z += dz;
+        
+        // Se encontrar uma parede no caminho, não há linha de visão
+        if (mazeLayout[z][x] === 1 || mazeLayout[z][x] === 2) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
 function moveRats() {
+    const playerGridPos = worldToGrid(player.position.x, player.position.z);
+    
     rats.forEach(rat => {
         if (!rat.isMoving) {
-            const directions = [
-                { dx: 1, dz: 0, rotation: -Math.PI/2 },  
-                { dx: -1, dz: 0, rotation: Math.PI/2 },  
-                { dx: 0, dz: 1, rotation: Math.PI },     
-                { dx: 0, dz: -1, rotation: 0 }           
-            ];
-
-            const validDirections = directions.filter(dir => {
-                const newX = rat.gridX + dir.dx;
-                const newZ = rat.gridZ + dir.dz;
-                return canMoveToCell(newX, newZ);
-            });
-
-            if (validDirections.length > 0) {
-                const direction = validDirections[Math.floor(Math.random() * validDirections.length)];
-                rat.targetGridX = rat.gridX + direction.dx;
-                rat.targetGridZ = rat.gridZ + direction.dz;
-                rat.isMoving = true;
+            // Verifica se tem linha de visão para o jogador
+            if (hasLineOfSight(rat.gridX, rat.gridZ, playerGridPos.x, playerGridPos.z)) {
+                // Modo perseguição
+                const dx = Math.sign(playerGridPos.x - rat.gridX);
+                const dz = Math.sign(playerGridPos.z - rat.gridZ);
                 
-                rat.mesh.rotation.y = direction.rotation;
+                // Tenta mover na direção do jogador
+                if (dx !== 0 && canMoveToCell(rat.gridX + dx, rat.gridZ)) {
+                    rat.targetGridX = rat.gridX + dx;
+                    rat.targetGridZ = rat.gridZ;
+                    rat.isMoving = true;
+                } else if (dz !== 0 && canMoveToCell(rat.gridX, rat.gridZ + dz)) {
+                    rat.targetGridX = rat.gridX;
+                    rat.targetGridZ = rat.gridZ + dz;
+                    rat.isMoving = true;
+                }
+            } else {
+                // Movimento aleatório normal
+                const directions = [
+                    { dx: 1, dz: 0, rotation: -Math.PI/2 },
+                    { dx: -1, dz: 0, rotation: Math.PI/2 },
+                    { dx: 0, dz: 1, rotation: Math.PI },
+                    { dx: 0, dz: -1, rotation: 0 }
+                ];
+
+                const validDirections = directions.filter(dir => {
+                    const newX = rat.gridX + dir.dx;
+                    const newZ = rat.gridZ + dir.dz;
+                    return canMoveToCell(newX, newZ);
+                });
+
+                if (validDirections.length > 0) {
+                    const direction = validDirections[Math.floor(Math.random() * validDirections.length)];
+                    rat.targetGridX = rat.gridX + direction.dx;
+                    rat.targetGridZ = rat.gridZ + direction.dz;
+                    rat.isMoving = true;
+                    rat.mesh.rotation.y = direction.rotation;
+                }
             }
         }
     });
 }
+
+// Aumente a frequência de movimento dos ratos quando estão perseguindo
+// Modifique a constante RAT_MOVE_INTERVAL para um valor menor
 
 function updateRats() {
     rats.forEach(rat => {
