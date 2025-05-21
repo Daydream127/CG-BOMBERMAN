@@ -190,7 +190,7 @@ function explodeBomb(bomb) {
     // Criar flash de luz
     const explosionLight = new THREE.PointLight(0xffff00, 3, 10);
     explosionLight.position.copy(bomb.mesh.position);
-    explosionLight.position.y = 2; // Posicionar um pouco acima do chão
+    explosionLight.position.y = 1; // Posicionar um pouco acima do chão
     scene.add(explosionLight);
     
     // Animação do flash
