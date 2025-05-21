@@ -50,6 +50,19 @@ let secondaryScene, secondaryCamera, secondaryRenderer;
 let topViewScene, topViewCamera, topViewRenderer;
 let player, arena, topViewPlayer, topViewArena;
 let rats = []; 
+
+let freeCamera;
+let freeCameraActive = false;
+let freeCameraSpeed = 0.5;
+let freeCameraRotationSpeed = 0.02;
+let freeCameraControls = {
+    up: false,
+    down: false,
+    left: false,
+    right: false,
+    forward: false,
+    backward: false
+};
 const RAT_MOVE_INTERVAL = 2000;
 const MOVEMENT_DURATION = 500; // Mais rápido, estilo Minecraft
 const LIMB_ROTATION = Math.PI / 4;
@@ -414,6 +427,12 @@ secondaryCamera.rotation.z = 0;
     window.addEventListener('resize', onWindowResize, false);
 
     animate();
+}
+
+function createFreeCamera() {
+    freeCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    freeCamera.position.set(0, 10, 20);
+    freeCamera.lookAt(0, 0, 0);
 }
 
 function createArena() {
@@ -914,6 +933,38 @@ function createTopViewPlayer() {
 function onKeyDown(event) {
     if (!canMove || !gameActive || isGameOver) return;
 
+        if (event.code === 'KeyV') { // Tecla V para alternar entre câmeras
+        freeCameraActive = !freeCameraActive;
+        if (freeCameraActive && !freeCamera) {
+            createFreeCamera();
+        }
+        return;
+    }
+
+    if (freeCameraActive) {
+        switch (event.code) {
+            case 'ArrowUp':
+                freeCameraControls.forward = true;
+                break;
+            case 'ArrowDown':
+                freeCameraControls.backward = true;
+                break;
+            case 'ArrowLeft':
+                freeCameraControls.left = true;
+                break;
+            case 'ArrowRight':
+                freeCameraControls.right = true;
+                break;
+            case 'KeyQ':
+                freeCameraControls.up = true;
+                break;
+            case 'KeyE':
+                freeCameraControls.down = true;
+                break;
+        }
+        return;
+    }
+
     let willMove = false;
     
     switch (event.code) {
@@ -979,6 +1030,30 @@ function canMoveToCell(gridX, gridZ) {
 }
 
 function onKeyUp(event) {
+
+        if (freeCameraActive) {
+        switch (event.code) {
+            case 'ArrowUp':
+                freeCameraControls.forward = false;
+                break;
+            case 'ArrowDown':
+                freeCameraControls.backward = false;
+                break;
+            case 'ArrowLeft':
+                freeCameraControls.left = false;
+                break;
+            case 'ArrowRight':
+                freeCameraControls.right = false;
+                break;
+            case 'KeyQ':
+                freeCameraControls.up = false;
+                break;
+            case 'KeyE':
+                freeCameraControls.down = false;
+                break;
+        }
+        return;
+    }
     switch (event.code) {
         case 'KeyW':
             moveForward = false;
@@ -995,15 +1070,53 @@ function onKeyUp(event) {
     }
 }
 
+function updateFreeCamera() {
+    if (!freeCameraActive || !freeCamera) return;
+
+    const forward = new THREE.Vector3(0, 0, -1);
+    forward.applyQuaternion(freeCamera.quaternion);
+    const right = new THREE.Vector3(1, 0, 0);
+    right.applyQuaternion(freeCamera.quaternion);
+
+    if (freeCameraControls.forward) {
+        freeCamera.position.addScaledVector(forward, freeCameraSpeed);
+    }
+    if (freeCameraControls.backward) {
+        freeCamera.position.addScaledVector(forward, -freeCameraSpeed);
+    }
+    if (freeCameraControls.right) {
+        freeCamera.position.addScaledVector(right, freeCameraSpeed);
+    }
+    if (freeCameraControls.left) {
+        freeCamera.position.addScaledVector(right, -freeCameraSpeed);
+    }
+    if (freeCameraControls.up) {
+        freeCamera.position.y += freeCameraSpeed;
+    }
+    if (freeCameraControls.down) {
+        freeCamera.position.y -= freeCameraSpeed;
+    }
+}
+
+
 function onWindowResize() {
     if (!gameActive) return;
 
     const aspect = window.innerWidth / window.innerHeight;
+    
+    // Atualizar câmera ortográfica existente
     camera.left = -arenaSize * aspect / 2;
     camera.right = arenaSize * aspect / 2;
     camera.top = arenaSize / 2;
     camera.bottom = -arenaSize / 2;
     camera.updateProjectionMatrix();
+    
+    // Atualizar câmera livre
+    if (freeCamera) {
+        freeCamera.aspect = aspect;
+        freeCamera.updateProjectionMatrix();
+    }
+    
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
@@ -1030,13 +1143,15 @@ function animate() {
 
         updatePlayerMovement();
                 updateRats(); 
+        updateFreeCamera(); // Adicione esta linha
 
-
-        renderer.render(scene, camera);
+        // Modifique esta parte para usar a câmera apropriada
+        renderer.render(scene, freeCameraActive ? freeCamera : camera);
         topViewRenderer.render(topViewScene, topViewCamera);
-        secondaryRenderer.render(scene, secondaryCamera); 
+        secondaryRenderer.render(scene, secondaryCamera);
     }
-}
+    }
+
 
 function updatePlayerMovement() {
     if (!canMove) {
