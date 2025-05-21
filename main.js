@@ -227,6 +227,8 @@ function explodeBomb(bomb) {
     };
     
     const explosionCells = [];
+        const killedRats = new Set();
+
 
     const addExplosion = (gridX, gridZ) => {
         if (gridX >= 0 && gridX < gridSize && gridZ >= 0 && gridZ < gridSize) {
@@ -235,6 +237,12 @@ function explodeBomb(bomb) {
             explosionMesh.position.set(worldPos.x, 0.1, worldPos.z);
             scene.add(explosionMesh);
             explosionCells.push(explosionMesh);
+
+                        rats.forEach(rat => {
+                if (rat.gridX === gridX && rat.gridZ === gridZ) {
+                    killedRats.add(rat);
+                }
+            });
             
             if (mazeLayout[gridZ][gridX] === 2) {
                 mazeLayout[gridZ][gridX] = 0;
@@ -255,6 +263,8 @@ function explodeBomb(bomb) {
     addExplosion(bomb.gridX, bomb.gridZ);
     
     const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+
+
     
     directions.forEach(([dx, dz]) => {
         let canContinue = true;
@@ -274,6 +284,14 @@ function explodeBomb(bomb) {
         transparent: true,
         opacity: 0.7 
     });
+    });
+
+            rats = rats.filter(rat => {
+        if (killedRats.has(rat)) {
+            scene.remove(rat.mesh);
+            return false;
+        }
+        return true;
     });
 
 const checkPlayerDamage = () => {
