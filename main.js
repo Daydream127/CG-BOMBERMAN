@@ -121,6 +121,15 @@ const availableModels = [
         mtl: '/assets/models/caixacorreio/caixacorreio.mtl'
     },
 ];
+
+const powerUpModels = [
+    {
+        obj: '/assets/models/CreamPie/CreamPie.obj',
+        mtl: '/assets/models/Creampie/CreamPie.mtl'
+    },
+];
+
+
  
 
 
@@ -244,17 +253,43 @@ function explodeBomb(bomb) {
                 }
             });
             
-            if (mazeLayout[gridZ][gridX] === 2) {
-                mazeLayout[gridZ][gridX] = 0;
-                arena.children.forEach(child => {
-                    if (child.position.x === worldPos.x && 
-                        child.position.z === worldPos.z && 
-                        child instanceof THREE.Group) {
-                        arena.remove(child);
-                    }
-                });
-                return false; 
+if (mazeLayout[gridZ][gridX] === 2) {
+    mazeLayout[gridZ][gridX] = 0;
+    arena.children.forEach(child => {
+        if (child.position.x === worldPos.x && 
+            child.position.z === worldPos.z && 
+            child instanceof THREE.Group) {
+            arena.remove(child);
+            
+            // Chance de 30% de spawnar um power-up
+            if (Math.random() < 0.3) {
+                const randomPowerUp = powerUpModels[Math.floor(Math.random() * powerUpModels.length)];
+                const powerUpGroup = new THREE.Group();
+                powerUpGroup.position.set(worldPos.x, wallHeight/2, worldPos.z);
+                
+                // Adiciona uma propriedade para identificar como power-up
+                powerUpGroup.userData.isPowerUp = true;
+                
+                loadOBJModel(
+                    randomPowerUp.obj,
+                    randomPowerUp.mtl,
+                    { x: 0, y: 0, z: 0 },
+                    powerUpGroup
+                );
+                
+                // Adiciona animação flutuante
+                const initialY = powerUpGroup.position.y;
+                powerUpGroup.userData.floatAnimation = {
+                    initialY: initialY,
+                    offset: 0
+                };
+                
+                arena.add(powerUpGroup);
             }
+        }
+    });
+    return false;
+}
             return true; 
         }
         return false;
@@ -1364,6 +1399,21 @@ function checkWallCollisions() {
     if (player.position.z < -limit) player.position.z = -limit;
 }
 
+
+function updatePowerUps() {
+    arena.children.forEach(child => {
+        if (child.userData.isPowerUp) {
+            // Animação flutuante
+            child.userData.floatAnimation.offset += 0.05;
+            child.position.y = child.userData.floatAnimation.initialY + 
+                             Math.sin(child.userData.floatAnimation.offset) * 0.2;
+            
+            // Rotação suave
+            child.rotation.y += 0.02;
+        }
+    });
+}
+
 function animate() {
     requestAnimationFrame(animate);
 
@@ -1375,6 +1425,8 @@ function animate() {
         });
 
         updatePlayerMovement();
+                updatePowerUps(); // Adicione esta linha
+
                 updateRats(); 
         updateFreeCamera(); 
         updateCameraRotation
