@@ -359,6 +359,11 @@ function gridToWorld(gridX, gridZ) {
     };
 }
 
+function checkRatCollision(rat) {
+    const playerGridPos = worldToGrid(player.position.x, player.position.z);
+    return rat.gridX === playerGridPos.x && rat.gridZ === playerGridPos.z;
+}
+
 function worldToGrid(worldX, worldZ) {
     return {
         x: Math.floor((worldX + arenaSize/2) / cellSize),
@@ -744,7 +749,8 @@ function createRat(gridX, gridZ) {
         isMoving: false,
         rotation: 0,
         lastKnownPlayerPos: null,  // Nova propriedade
-        isChasing: false          // Nova propriedade
+        isChasing: false,
+        lastDamageTime: 0
     };
 }
 function initializeRats() {
@@ -867,7 +873,32 @@ function moveRats() {
 // Modifique a constante RAT_MOVE_INTERVAL para um valor menor
 
 function updateRats() {
+        const currentTime = Date.now();
+    const DAMAGE_COOLDOWN = 3000; // 
     rats.forEach(rat => {
+        // Verifica colisão com o jogador
+        if (checkRatCollision(rat) && !isGameOver) {
+            // Verifica se passou tempo suficiente desde o último dano
+            if (currentTime - rat.lastDamageTime >= DAMAGE_COOLDOWN) {
+                if (damageSound) {
+                    const sound = new THREE.Audio(listener);
+                    sound.setBuffer(damageSound);
+                    sound.setVolume(0.5);
+                    sound.play();
+                }
+                
+                playerLives--;
+                updateHUD();
+                
+                // Atualiza o tempo do último dano
+                rat.lastDamageTime = currentTime;
+                
+                if (playerLives <= 0) {
+                    gameOver();
+                }
+                 }
+        }
+
         if (rat.isMoving) {
             const targetPos = gridToWorld(rat.targetGridX, rat.targetGridZ);
             const moveSpeed = 0.03;
@@ -887,7 +918,6 @@ function updateRats() {
                 rat.mesh.position.z += (dz / distance) * moveSpeed;
 
                 const targetAngle = Math.atan2(dx, dz);
-                
                 rat.mesh.rotation.y = targetAngle;
             }
         }
