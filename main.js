@@ -72,6 +72,11 @@ let currentRotationY = 0;
 const rotationSmoothing = 0.1;
 const maxVerticalRotation = Math.PI / 2;
 
+let isSpeedBoosted = false;
+let speedBoostTimeout = null;
+const SPEED_BOOST_DURATION = 5000; // 5 segundos
+const SPEED_BOOST_MULTIPLIER = 1.5;
+
 const RAT_MOVE_INTERVAL = 1000;
 const MOVEMENT_DURATION = 500; // Mais rápido, estilo Minecraft
 const LIMB_ROTATION = Math.PI / 4;
@@ -86,6 +91,8 @@ const BOMB_TIMER = 2000;
 const EXPLOSION_DURATION = 1000; 
 const EXPLOSION_RANGE = 2; 
 let canMove = true;
+let playerSpeed2 = 1.0;
+
 const playerSpeed = 1.0;
 
 
@@ -261,8 +268,8 @@ if (mazeLayout[gridZ][gridX] === 2) {
             child instanceof THREE.Group) {
             arena.remove(child);
             
-            // Chance de 30% de spawnar um power-up
-            if (Math.random() < 0.3) {
+            // deixar a 1 para teste
+            if (Math.random() < 1) {
                 const randomPowerUp = powerUpModels[Math.floor(Math.random() * powerUpModels.length)];
                 const powerUpGroup = new THREE.Group();
                 powerUpGroup.position.set(worldPos.x, wallHeight/2, worldPos.z);
@@ -636,6 +643,13 @@ const audioLoader = new THREE.AudioLoader();
 const listener = new THREE.AudioListener();
 let bombSound;
 let damageSound;
+
+let collectSound;
+
+
+audioLoader.load('assets/sounds/collect.wav', function(buffer) {
+    collectSound = buffer;
+});
 
 
 audioLoader.load('assets/sounds/bomba.wav', function(buffer) {
@@ -1425,7 +1439,9 @@ function animate() {
         });
 
         updatePlayerMovement();
-                updatePowerUps(); // Adicione esta linha
+                updatePowerUps(); // Adicione esta 
+                        checkPowerUpCollection(); // Adicione esta linha
+
 
                 updateRats(); 
         updateFreeCamera(); 
@@ -1441,6 +1457,7 @@ function animate() {
 
 function updatePlayerMovement() {
     if (!canMove) {
+        const MOVEMENT_DURATION = 500 / playerSpeed2; // Movimento mais rápido quando com speed boost
         const targetPos = gridToWorld(targetGridX, targetGridZ);
         const progress = (Date.now() - player.userData.moveStartTime) / MOVEMENT_DURATION;
         const smoothProgress = Math.min(progress, 1);
@@ -1487,3 +1504,97 @@ function updateTopViewPlayer() {
     }
 }
 
+function checkPowerUpCollection() {
+    const playerGridPos = worldToGrid(player.position.x, player.position.z);
+    const playerWorldPos = gridToWorld(playerGridPos.x, playerGridPos.z);
+    
+    arena.children.forEach(child => {
+        if (child.userData.isPowerUp) {
+            const powerUpGridPos = worldToGrid(child.position.x, child.position.z);
+            
+            if (powerUpGridPos.x === playerGridPos.x && powerUpGridPos.z === playerGridPos.z) {
+                // Remove o power-up
+                arena.remove(child);
+                
+                // Aplica o efeito do power-up
+                applyPowerUpEffect();
+                
+                // Efeito sonoro de coleta (opcional)
+                if (collectSound) {
+                    const sound = new THREE.Audio(listener);
+                    sound.setBuffer(collectSound);
+                    sound.setVolume(0.5);
+                    sound.play();
+                }
+            }
+        }
+    });
+}
+
+
+
+
+function applyPowerUpEffect() {
+    // Escolhe aleatoriamente entre vida extra ou boost de velocidade
+    const effectType = Math.random() < 0.5 ? 'health' : 'speed';
+    
+    switch (effectType) {
+        case 'health':
+            playerLives++;
+            updateHUD();
+            // Efeito visual opcional
+            showFloatingText('+1 VIDA', 0x00ff00);
+            break;
+            
+        case 'speed':
+            if (isSpeedBoosted) {
+                clearTimeout(speedBoostTimeout);
+            }
+            
+            isSpeedBoosted = true;
+            playerSpeed2 = SPEED_BOOST_MULTIPLIER;
+            showFloatingText('VELOCIDADE +', 0xffff00);
+            
+            speedBoostTimeout = setTimeout(() => {
+                isSpeedBoosted = false;
+                playerSpeed2 = 1.0;
+                showFloatingText('VELOCIDADE NORMAL', 0xffff00);
+            }, SPEED_BOOST_DURATION);
+            break;
+    }
+}
+
+function showFloatingText(text, color) {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    context.font = 'Bold 32px Arial';
+    
+    // Configura o texto
+    const textWidth = context.measureText(text).width;
+    canvas.width = textWidth + 20;
+    canvas.height = 48;
+    
+    // Desenha o texto
+    context.font = 'Bold 32px Arial';
+    context.fillStyle = `#${color.toString(16).padStart(6, '0')}`;
+    context.fillText(text, 10, 34);
+    
+    // Cria a textura e o sprite
+    const texture = new THREE.Texture(canvas);
+    texture.needsUpdate = true;
+    
+    const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+    const sprite = new THREE.Sprite(spriteMaterial);
+    
+    // Posiciona o sprite acima do jogador
+    sprite.position.copy(player.position);
+    sprite.position.y += 2;
+    sprite.scale.set(2, 1, 1);
+    
+    scene.add(sprite);
+    
+    // Remove o sprite após 2 segundos
+    setTimeout(() => {
+        scene.remove(sprite);
+    }, 2000);
+}
