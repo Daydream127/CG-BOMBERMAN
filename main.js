@@ -187,6 +187,31 @@ function explodeBomb(bomb) {
     scene.remove(bomb.mesh);
     bombs = bombs.filter(b => b !== bomb);
     
+    // Criar flash de luz
+    const explosionLight = new THREE.PointLight(0xffff00, 3, 10);
+    explosionLight.position.copy(bomb.mesh.position);
+    explosionLight.position.y = 2; // Posicionar um pouco acima do chão
+    scene.add(explosionLight);
+    
+    // Animação do flash
+    const flashDuration = 500; // duração em millisegundos
+    const flashStartIntensity = 30;
+    const flashStartTime = Date.now();
+    
+    function updateFlash() {
+        const elapsed = Date.now() - flashStartTime;
+        const progress = elapsed / flashDuration;
+        
+        if (progress < 1) {
+            explosionLight.intensity = flashStartIntensity * (1 - progress);
+            requestAnimationFrame(updateFlash);
+        } else {
+            scene.remove(explosionLight);
+        }
+    }
+    
+    updateFlash();
+    
     const explosionGeometry = new THREE.BoxGeometry(cellSize, 0.1, cellSize);
     const explosionMaterial = new THREE.MeshPhongMaterial({ 
         color: 0xff0000,
@@ -243,6 +268,12 @@ function explodeBomb(bomb) {
             
             canContinue = addExplosion(gridX, gridZ);
         }
+            const explosionGeometry = new THREE.BoxGeometry(cellSize, 0.1, cellSize);
+    const explosionMaterial = new THREE.MeshPhongMaterial({ 
+        color: 0xff0000,
+        transparent: true,
+        opacity: 0.7 
+    });
     });
 
 const checkPlayerDamage = () => {
