@@ -42,6 +42,7 @@ const arenaSize = 30;
 const wallHeight = 2;
 const gridSize = 15; 
 const cellSize = arenaSize / gridSize;
+
 let scene, camera, renderer;
 let playerLives = 3;
 let isGameOver = false;
@@ -50,6 +51,8 @@ let topViewScene, topViewCamera, topViewRenderer;
 let player, arena, topViewPlayer, topViewArena;
 let rats = []; 
 const RAT_MOVE_INTERVAL = 2000;
+const MOVEMENT_DURATION = 500; // Mais rápido, estilo Minecraft
+const LIMB_ROTATION = Math.PI / 4;
 let moveForward = false;
 let moveBackward = false;
 let moveLeft = false;
@@ -745,26 +748,97 @@ function createTopViewWall(width, height, depth, color) {
 }
 
 function createPlayer() {
-    const bodyGeometry = new THREE.BoxGeometry(0.8, 1.2, 0.8);
+    player = new THREE.Group();
+
+    // Body with original size
+    const bodyGeometry = new THREE.BoxGeometry(0.8, 1.0, 0.4);
     const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x3333ff });
     const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-    body.position.y = 0.6;
+    body.position.y = 0.8;
     body.castShadow = true;
 
-    const headGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+    // Head
+    const headGeometry = new THREE.SphereGeometry(0.4, 16, 16);
     const headMaterial = new THREE.MeshLambertMaterial({ color: 0xffcc99 });
     const head = new THREE.Mesh(headGeometry, headMaterial);
     head.position.y = 1.5;
     head.castShadow = true;
 
-    player = new THREE.Group();
+    // Arms
+    const armGeometry = new THREE.BoxGeometry(0.2, 0.6, 0.2);
+    const armMaterial = new THREE.MeshLambertMaterial({ color: 0x3333ff });
+    
+    const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+    leftArm.position.set(-0.5, 0.9, 0);
+    leftArm.castShadow = true;
+    
+    const rightArm = new THREE.Mesh(armGeometry, armMaterial);
+    rightArm.position.set(0.5, 0.9, 0);
+    rightArm.castShadow = true;
+
+    // Legs with original size
+    const legGeometry = new THREE.BoxGeometry(0.25, 0.7, 0.25);
+    const legMaterial = new THREE.MeshLambertMaterial({ color: 0x2222aa });
+    
+    // Create leg groups for proper rotation
+    const leftLegGroup = new THREE.Group();
+    const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+    leftLeg.position.y = -0.35; // Half of leg height
+    leftLegGroup.position.set(-0.3, 0.3, 0);
+    leftLegGroup.add(leftLeg);
+    
+    const rightLegGroup = new THREE.Group();
+    const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
+    rightLeg.position.y = -0.35; // Half of leg height
+    rightLegGroup.position.set(0.3, 0.3, 0);
+    rightLegGroup.add(rightLeg);
+
     player.add(body);
     player.add(head);
+    player.add(leftArm);
+    player.add(rightArm);
+    player.add(leftLegGroup);
+    player.add(rightLegGroup);
+
+    player.userData = {
+        leftArm,
+        rightArm,
+        leftLegGroup,
+        rightLegGroup,
+        isWalking: false,
+        walkingTime: 0
+    };
 
     const initialPos = gridToWorld(currentGridX, currentGridZ);
     player.position.set(initialPos.x, 0, initialPos.z);
 
     scene.add(player);
+}
+
+function animatePlayerLimbs(walkCycle) {
+    if (!player || !player.userData) return;
+
+    const { leftArm, rightArm, leftLegGroup, rightLegGroup } = player.userData;
+    
+    if (!canMove) {
+        // Animação suave dos membros
+        const armSwing = Math.sin(walkCycle) * LIMB_ROTATION;
+        const legSwing = -Math.sin(walkCycle) * LIMB_ROTATION;
+
+        // Aplica rotação suave nos braços
+        leftArm.rotation.x = THREE.MathUtils.lerp(leftArm.rotation.x, armSwing, 0.3);
+        rightArm.rotation.x = THREE.MathUtils.lerp(rightArm.rotation.x, -armSwing, 0.3);
+
+        // Aplica rotação suave nas pernas usando os grupos
+        leftLegGroup.rotation.x = THREE.MathUtils.lerp(leftLegGroup.rotation.x, legSwing, 0.3);
+        rightLegGroup.rotation.x = THREE.MathUtils.lerp(rightLegGroup.rotation.x, -legSwing, 0.3);
+    } else {
+        // Retorno suave à posição inicial
+        leftArm.rotation.x = THREE.MathUtils.lerp(leftArm.rotation.x, 0, 0.3);
+        rightArm.rotation.x = THREE.MathUtils.lerp(rightArm.rotation.x, 0, 0.3);
+        leftLegGroup.rotation.x = THREE.MathUtils.lerp(leftLegGroup.rotation.x, 0, 0.3);
+        rightLegGroup.rotation.x = THREE.MathUtils.lerp(rightLegGroup.rotation.x, 0, 0.3);
+    }
 }
 
 function createTopViewPlayer() {
@@ -782,8 +856,9 @@ function createTopViewPlayer() {
 function onKeyDown(event) {
     if (!canMove || !gameActive || isGameOver) return;
 
+    let willMove = false;
+    
     switch (event.code) {
-
         case 'KeyC': 
             switchCamera();
             break;
@@ -796,28 +871,28 @@ function onKeyDown(event) {
             if (canMoveToCell(currentGridX, currentGridZ - 1)) {
                 moveForward = true;
                 targetGridZ = currentGridZ - 1;
-                canMove = false;
+                willMove = true;
             }
             break;
         case 'KeyA':
             if (canMoveToCell(currentGridX - 1, currentGridZ)) {
                 moveLeft = true;
                 targetGridX = currentGridX - 1;
-                canMove = false;
+                willMove = true;
             }
             break;
         case 'KeyS':
             if (canMoveToCell(currentGridX, currentGridZ + 1)) {
                 moveBackward = true;
                 targetGridZ = currentGridZ + 1;
-                canMove = false;
+                willMove = true;
             }
             break;
         case 'KeyD':
             if (canMoveToCell(currentGridX + 1, currentGridZ)) {
                 moveRight = true;
                 targetGridX = currentGridX + 1;
-                canMove = false;
+                willMove = true;
             }
             break;
         case 'Escape': 
@@ -825,6 +900,15 @@ function onKeyDown(event) {
             gameContainer.style.display = 'none';
             menuContainer.style.display = 'flex';
             break;
+    }
+
+    if (willMove) {
+        canMove = false;
+        player.userData.moveStartTime = Date.now();
+        player.userData.startPos = {
+            x: player.position.x,
+            z: player.position.z
+        };
     }
 }
 
@@ -899,27 +983,42 @@ function animate() {
 function updatePlayerMovement() {
     if (!canMove) {
         const targetPos = gridToWorld(targetGridX, targetGridZ);
-        const moveSpeed = 0.03; 
+        const progress = (Date.now() - player.userData.moveStartTime) / MOVEMENT_DURATION;
+        const smoothProgress = Math.min(progress, 1);
 
-        const dx = targetPos.x - player.position.x;
-        const dz = targetPos.z - player.position.z;
+        // Calcula a direção do movimento
+        const dx = targetGridX - currentGridX;
+        const dz = targetGridZ - currentGridZ;
+        
+        // Rotação instantânea estilo Minecraft
+        if (dx > 0) player.rotation.y = -Math.PI / 2;      // Direita
+        else if (dx < 0) player.rotation.y = Math.PI / 2;  // Esquerda
+        else if (dz > 0) player.rotation.y = Math.PI;      // Baixo
+        else if (dz < 0) player.rotation.y = 0;            // Cima
 
-        const distance = Math.sqrt(dx * dx + dz * dz);
-
-        if (distance < 0.1) {
+        if (smoothProgress < 1) {
+            // Movimento linear suave
+            player.position.x = player.userData.startPos.x + (targetPos.x - player.userData.startPos.x) * smoothProgress;
+            player.position.z = player.userData.startPos.z + (targetPos.z - player.userData.startPos.z) * smoothProgress;
+            
+            // Animação suave dos membros
+            const walkCycle = smoothProgress * Math.PI * 2; // Ciclo completo de animação
+            animatePlayerLimbs(walkCycle);
+        } else {
+            // Finaliza o movimento
             player.position.x = targetPos.x;
             player.position.z = targetPos.z;
             currentGridX = targetGridX;
             currentGridZ = targetGridZ;
             moveForward = moveBackward = moveLeft = moveRight = false;
             canMove = true;
-        } else {
-            player.position.x += (dx / distance) * moveSpeed;
-            player.position.z += (dz / distance) * moveSpeed;
+            
+            // Reset suave da animação
+            animatePlayerLimbs(Math.PI * 2);
         }
-    }
 
-    updateTopViewPlayer();
+        updateTopViewPlayer();
+    }
 }
 
 function updateTopViewPlayer() {
