@@ -53,7 +53,7 @@ let rats = [];
 
 let freeCamera;
 let freeCameraActive = false;
-let freeCameraSpeed = 0.5;
+let freeCameraSpeed = 0.05;
 let freeCameraRotationSpeed = 0.02;
 let freeCameraControls = {
     up: false,
@@ -637,11 +637,17 @@ function createMazeBlocks() {
             else if (mazeLayout[z][x] === 2) {
                 const worldPos = gridToWorld(x, z);
                 const randomModel = availableModels[Math.floor(Math.random() * availableModels.length)];
+                
+                // Criar um grupo para o modelo e ajustar sua posição Y
+                const modelGroup = new THREE.Group();
+                modelGroup.position.set(worldPos.x, wallHeight/2, worldPos.z); // Ajuste o Y para wallHeight/2
+                arena.add(modelGroup);
+                
                 loadOBJModel(
                     randomModel.obj,
                     randomModel.mtl,
-                    { x: worldPos.x, y: 0, z: worldPos.z },
-                    arena
+                    { x: 0, y: 0, z: 0 }, // Posição local dentro do grupo
+                    modelGroup
                 );
             }
         }
@@ -875,9 +881,9 @@ const eyeGeometry = new THREE.SphereGeometry(0.08, 8, 8);
     const mouthGeometry = new THREE.TorusGeometry(0.1, 0.02, 8, 12, Math.PI);
     const mouthMaterial = new THREE.MeshLambertMaterial({ color: 0x333333 });
     const mouth = new THREE.Mesh(mouthGeometry, mouthMaterial);
-    mouth.position.set(0, 1.4, -0.35);
-    mouth.rotation.x = -Math.PI / 2;  // Changed from Math.PI / 2 to -Math.PI / 2
-    mouth.rotation.z = Math.PI; 
+    mouth.position.set(0, 1.35, -0.38); // Ajustado Y e Z para posicionar corretamente
+    mouth.rotation.x = 0; // Remove a rotação no eixo X
+    mouth.rotation.z = Math.PI; // Mantém a rotação em Z para orientação correta
 
     // Cowboy Hat
     const hatGroup = new THREE.Group();
