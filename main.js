@@ -742,7 +742,9 @@ function createRat(gridX, gridZ) {
         targetGridX: gridX,
         targetGridZ: gridZ,
         isMoving: false,
-        rotation: 0 
+        rotation: 0,
+        lastKnownPlayerPos: null,  // Nova propriedade
+        isChasing: false          // Nova propriedade
     };
 }
 function initializeRats() {
@@ -791,13 +793,15 @@ function moveRats() {
     
     rats.forEach(rat => {
         if (!rat.isMoving) {
-            // Verifica se tem linha de visão para o jogador
             if (hasLineOfSight(rat.gridX, rat.gridZ, playerGridPos.x, playerGridPos.z)) {
+                // Atualiza última posição conhecida e marca como perseguindo
+                rat.lastKnownPlayerPos = { x: playerGridPos.x, z: playerGridPos.z };
+                rat.isChasing = true;
+                
                 // Modo perseguição
                 const dx = Math.sign(playerGridPos.x - rat.gridX);
                 const dz = Math.sign(playerGridPos.z - rat.gridZ);
                 
-                // Tenta mover na direção do jogador
                 if (dx !== 0 && canMoveToCell(rat.gridX + dx, rat.gridZ)) {
                     rat.targetGridX = rat.gridX + dx;
                     rat.targetGridZ = rat.gridZ;
@@ -806,6 +810,31 @@ function moveRats() {
                     rat.targetGridX = rat.gridX;
                     rat.targetGridZ = rat.gridZ + dz;
                     rat.isMoving = true;
+                }
+            } else if (rat.isChasing && rat.lastKnownPlayerPos) {
+                // Move em direção à última posição conhecida
+                const dx = Math.sign(rat.lastKnownPlayerPos.x - rat.gridX);
+                const dz = Math.sign(rat.lastKnownPlayerPos.z - rat.gridZ);
+                
+                let moved = false;
+                
+                if (dx !== 0 && canMoveToCell(rat.gridX + dx, rat.gridZ)) {
+                    rat.targetGridX = rat.gridX + dx;
+                    rat.targetGridZ = rat.gridZ;
+                    moved = true;
+                } else if (dz !== 0 && canMoveToCell(rat.gridX, rat.gridZ + dz)) {
+                    rat.targetGridX = rat.gridX;
+                    rat.targetGridZ = rat.gridZ + dz;
+                    moved = true;
+                }
+                
+                if (moved) {
+                    rat.isMoving = true;
+                } else if (rat.gridX === rat.lastKnownPlayerPos.x && 
+                          rat.gridZ === rat.lastKnownPlayerPos.z) {
+                    // Chegou à última posição conhecida, volta ao movimento aleatório
+                    rat.lastKnownPlayerPos = null;
+                    rat.isChasing = false;
                 }
             } else {
                 // Movimento aleatório normal
