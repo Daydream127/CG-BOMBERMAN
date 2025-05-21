@@ -63,6 +63,15 @@ let freeCameraControls = {
     forward: false,
     backward: false
 };
+let mouseX = 0;
+let mouseY = 0;
+let targetRotationX = 0;
+let targetRotationY = 0;
+let currentRotationX = 0;
+let currentRotationY = 0;
+const rotationSmoothing = 0.1;
+const maxVerticalRotation = Math.PI / 2;
+
 const RAT_MOVE_INTERVAL = 2000;
 const MOVEMENT_DURATION = 500; // Mais rápido, estilo Minecraft
 const LIMB_ROTATION = Math.PI / 4;
@@ -433,6 +442,62 @@ function createFreeCamera() {
     freeCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     freeCamera.position.set(0, 10, 20);
     freeCamera.lookAt(0, 0, 0);
+    
+    // Reset das rotações iniciais
+    targetRotationX = 0;
+    targetRotationY = 0;
+    currentRotationX = 0;
+    currentRotationY = 0;
+    
+    initializeFreeCameraControls();
+}
+
+function initializeFreeCameraControls() {
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('pointerlockchange', onPointerLockChange);
+}
+
+function onPointerLockChange() {
+    if (document.pointerLockElement === document.body) {
+        freeCameraActive = true;
+    } else {
+        freeCameraActive = false;
+    }
+}
+
+function onMouseMove(event) {
+    if (!freeCameraActive || !freeCamera) return;
+    
+    // Ajustar sensibilidade do mouse
+    const sensitivity = 0.002;
+    
+    // Usar movementX e movementY para rotação mais suave
+    const deltaX = event.movementX || 0;
+    const deltaY = event.movementY || 0;
+    
+    // Atualizar rotações alvo
+    targetRotationY -= deltaX * sensitivity;
+    targetRotationX -= deltaY * sensitivity;
+    
+    // Limitar rotação vertical
+    targetRotationX = Math.max(-Math.PI/2, Math.min(Math.PI/2, targetRotationX));
+    
+    // Aplicar rotações diretamente
+    freeCamera.rotation.order = 'YXZ'; // Importante para evitar gimbal lock
+    freeCamera.rotation.x = targetRotationX;
+    freeCamera.rotation.y = targetRotationY;
+}
+
+function updateCameraRotation() {
+    if (!freeCameraActive || !freeCamera) return;
+    
+    // Suavizar a rotação (opcional, pode remover se quiser movimento mais direto)
+    currentRotationX = THREE.MathUtils.lerp(currentRotationX, targetRotationX, 0.1);
+    currentRotationY = THREE.MathUtils.lerp(currentRotationY, targetRotationY, 0.1);
+    
+    // Aplicar rotações
+    freeCamera.rotation.x = currentRotationX;
+    freeCamera.rotation.y = currentRotationY;
 }
 
 function createArena() {
@@ -933,10 +998,14 @@ function createTopViewPlayer() {
 function onKeyDown(event) {
     if (!canMove || !gameActive || isGameOver) return;
 
-        if (event.code === 'KeyV') { // Tecla V para alternar entre câmeras
-        freeCameraActive = !freeCameraActive;
-        if (freeCameraActive && !freeCamera) {
-            createFreeCamera();
+   if (event.code === 'KeyV') {
+        if (!freeCameraActive) {
+            if (!freeCamera) {
+                createFreeCamera();
+            }
+            document.body.requestPointerLock();
+        } else {
+            document.exitPointerLock();
         }
         return;
     }
@@ -1143,7 +1212,8 @@ function animate() {
 
         updatePlayerMovement();
                 updateRats(); 
-        updateFreeCamera(); // Adicione esta linha
+        updateFreeCamera(); 
+        updateCameraRotation
 
         // Modifique esta parte para usar a câmera apropriada
         renderer.render(scene, freeCameraActive ? freeCamera : camera);
