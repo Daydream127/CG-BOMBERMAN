@@ -764,6 +764,61 @@ function createPlayer() {
     head.position.y = 1.5;
     head.castShadow = true;
 
+    // Eyes
+const eyeGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+    const eyeMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
+    const eyeballMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
+
+    // Left eye
+    const leftEye = new THREE.Group();
+    const leftEyeWhite = new THREE.Mesh(eyeGeometry, eyeMaterial);
+    const leftEyeball = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), eyeballMaterial);
+    leftEyeball.position.z = -0.05;  // Changed from 0.05 to -0.05
+    leftEye.add(leftEyeWhite);
+    leftEye.add(leftEyeball);
+    leftEye.position.set(-0.15, 1.6, -0.35);  // Changed from 0.35 to -0.35
+    
+    // Right eye
+    const rightEye = new THREE.Group();
+    const rightEyeWhite = new THREE.Mesh(eyeGeometry, eyeMaterial);
+    const rightEyeball = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), eyeballMaterial);
+    rightEyeball.position.z = -0.05;  // Changed from 0.05 to -0.05
+    rightEye.add(rightEyeWhite);
+    rightEye.add(rightEyeball);
+    rightEye.position.set(0.15, 1.6, -0.35);  // Changed from 0.35 to -0.35
+
+    // Mouth
+    const mouthGeometry = new THREE.TorusGeometry(0.1, 0.02, 8, 12, Math.PI);
+    const mouthMaterial = new THREE.MeshLambertMaterial({ color: 0x333333 });
+    const mouth = new THREE.Mesh(mouthGeometry, mouthMaterial);
+    mouth.position.set(0, 1.4, -0.35);
+    mouth.rotation.x = -Math.PI / 2;  // Changed from Math.PI / 2 to -Math.PI / 2
+    mouth.rotation.z = Math.PI; 
+
+    // Cowboy Hat
+    const hatGroup = new THREE.Group();
+    
+    // Hat brim
+    const brimGeometry = new THREE.CylinderGeometry(0.6, 0.6, 0.05, 32);
+    const hatMaterial = new THREE.MeshLambertMaterial({ color: 0x4A3C2B });
+    const brim = new THREE.Mesh(brimGeometry, hatMaterial);
+    brim.position.y = 1.9;
+    
+    // Hat crown
+    const crownGeometry = new THREE.CylinderGeometry(0.3, 0.35, 0.3, 32);
+    const crown = new THREE.Mesh(crownGeometry, hatMaterial);
+    crown.position.y = 2.05;
+    
+    // Hat band
+    const bandGeometry = new THREE.CylinderGeometry(0.32, 0.32, 0.08, 32);
+    const bandMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+    const band = new THREE.Mesh(bandGeometry, bandMaterial);
+    band.position.y = 1.95;
+
+    hatGroup.add(brim);
+    hatGroup.add(crown);
+    hatGroup.add(band);
+
     // Arms
     const armGeometry = new THREE.BoxGeometry(0.2, 0.6, 0.2);
     const armMaterial = new THREE.MeshLambertMaterial({ color: 0x3333ff });
@@ -776,25 +831,28 @@ function createPlayer() {
     rightArm.position.set(0.5, 0.9, 0);
     rightArm.castShadow = true;
 
-    // Legs with original size
+    // Legs
     const legGeometry = new THREE.BoxGeometry(0.25, 0.7, 0.25);
     const legMaterial = new THREE.MeshLambertMaterial({ color: 0x2222aa });
     
-    // Create leg groups for proper rotation
     const leftLegGroup = new THREE.Group();
     const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
-    leftLeg.position.y = -0.35; // Half of leg height
+    leftLeg.position.y = -0.35;
     leftLegGroup.position.set(-0.3, 0.3, 0);
     leftLegGroup.add(leftLeg);
     
     const rightLegGroup = new THREE.Group();
     const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
-    rightLeg.position.y = -0.35; // Half of leg height
+    rightLeg.position.y = -0.35;
     rightLegGroup.position.set(0.3, 0.3, 0);
     rightLegGroup.add(rightLeg);
 
     player.add(body);
     player.add(head);
+    player.add(leftEye);
+    player.add(rightEye);
+    player.add(mouth);
+    player.add(hatGroup);
     player.add(leftArm);
     player.add(rightArm);
     player.add(leftLegGroup);
