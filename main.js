@@ -53,7 +53,9 @@ let isGameOver = false;
 let secondaryScene, secondaryCamera, secondaryRenderer;
 let topViewScene, topViewCamera, topViewRenderer;
 let player, arena, topViewPlayer, topViewArena;
-let rats = []; 
+let rats = [];
+let totalCoins = 0;
+let collectedCoins = 0; 
 
 let freeCamera;
 let freeCameraActive = false;
@@ -178,6 +180,10 @@ const MAP_MODELS = {
         rat: {
             obj: '/assets/models/rat/rat.obj',
             mtl: '/assets/models/rat/rat.mtl'
+        },
+                coin: {
+            obj: '/assets/models/coin/coin.obj',
+            mtl: '/assets/models/coin/coin.mtl'
         }
     },
     maze: {
@@ -200,6 +206,10 @@ const MAP_MODELS = {
         rat: {
                 obj: '/assets/models/deer/deer.obj',
                 mtl: '/assets/models/deer/deer.mtl'
+        },
+                coin: {
+            obj: '/assets/models/coin/coin.obj',
+            mtl: '/assets/models/coin/coin.mtl'
         }
     },
     arena: {
@@ -222,6 +232,10 @@ const MAP_MODELS = {
         rat: {
             obj: '/assets/models/robot/robot.obj',
             mtl: '/assets/models/robot/robot.mtl'
+        },
+                coin: {
+            obj: '/assets/models/coin/coin.obj',
+            mtl: '/assets/models/coin/coin.mtl'
         }
     }
 };
@@ -531,7 +545,7 @@ hudContainer.style.fontFamily = 'Arial, sans-serif';
 gameContainer.appendChild(hudContainer);
 
 function updateHUD() {
-    hudContainer.textContent = `Lives: ${playerLives}`;
+    hudContainer.textContent = `Lives: ${playerLives} | Coins: ${collectedCoins}/${totalCoins}`;
 }
 
 function init() {
@@ -610,7 +624,7 @@ secondaryCamera.rotation.z = 0;
 
     createArena();
     createTopViewArena();
-
+    createCoins(); // Add this line
     createPlayer();
     createTopViewPlayer();
         initializeRats(); 
@@ -1149,14 +1163,12 @@ function createTopViewWall(width, height, depth, color) {
 function createPlayer() {
     player = new THREE.Group();
 
-    // Body with original size
     const bodyGeometry = new THREE.BoxGeometry(0.8, 1.0, 0.4);
     const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x3333ff });
     const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
     body.position.y = 0.8;
     body.castShadow = true;
 
-    // Head
     const headGeometry = new THREE.SphereGeometry(0.4, 16, 16);
     const headMaterial = new THREE.MeshLambertMaterial({ color: 0xffcc99 });
     const head = new THREE.Mesh(headGeometry, headMaterial);
@@ -1538,7 +1550,17 @@ function animate() {
         bombs.forEach(bomb => {
             const scale = 1 + 0.1 * Math.sin((currentTime - bomb.timer) / 200);
             bomb.mesh.scale.set(scale, scale, scale);
+        });       
+         arena.children.forEach(child => {
+            if (child.userData.isCoin) {
+                child.userData.floatAnimation.offset += 0.03;
+                child.position.y = child.userData.floatAnimation.initialY + 
+                                 Math.sin(child.userData.floatAnimation.offset) * 0.2;
+                child.rotation.y += 0.02;
+            }
         });
+        
+        checkCoinCollection();
 
         updatePlayerMovement();
                 updatePowerUps(); // Adicione esta 
@@ -1699,4 +1721,117 @@ function showFloatingText(text, color) {
     setTimeout(() => {
         scene.remove(sprite);
     }, 2000);
+}
+
+function createCoins() {
+    totalCoins = 0;
+    collectedCoins = 0;
+    
+    // Look for empty spaces in the maze
+    for (let z = 0; z < gridSize; z++) {
+        for (let x = 0; x < gridSize; x++) {
+            if (mazeLayout[z][x] === 0) {
+                // Add coin with 30% probability if space is empty
+                if (Math.random() < 0.1) {
+                    const worldPos = gridToWorld(x, z);
+                    const coinGroup = new THREE.Group();
+                    coinGroup.position.set(worldPos.x, wallHeight/2, worldPos.z);
+                    
+                    coinGroup.userData.isCoin = true;
+                    coinGroup.userData.floatAnimation = {
+                        initialY: wallHeight/2,
+                        offset: Math.random() * Math.PI * 2 // Random start phase
+                    };
+                    
+                    loadOBJModel(
+                        MAP_MODELS[currentMap].coin.obj,
+                        MAP_MODELS[currentMap].coin.mtl,
+                        { x: 0, y: 0, z: 0 },
+                        coinGroup
+                    );
+                    
+                    arena.add(coinGroup);
+                    totalCoins++;
+                }
+            }
+        }
+    }
+    
+    // Update HUD to show coin count
+    updateHUD();
+}
+
+
+function checkCoinCollection() {
+    const playerGridPos = worldToGrid(player.position.x, player.position.z);
+    const playerWorldPos = gridToWorld(playerGridPos.x, playerGridPos.z);
+    
+    arena.children.forEach(child => {
+        if (child.userData.isCoin) {
+            const coinGridPos = worldToGrid(child.position.x, child.position.z);
+            
+            if (coinGridPos.x === playerGridPos.x && coinGridPos.z === playerGridPos.z) {
+                // Remove the coin
+                arena.remove(child);
+                collectedCoins++;
+                
+                // Play collection sound
+                if (collectSound) {
+                    const sound = new THREE.Audio(listener);
+                    sound.setBuffer(collectSound);
+                    sound.setVolume(0.5);
+                    sound.play();
+                }
+                
+                // Show floating score
+                showFloatingText('+1', 0xFFD700);
+                
+                // Update HUD
+                updateHUD();
+                
+                // Check if all coins are collected
+                if (collectedCoins === totalCoins) {
+                    showLevelComplete();
+                }
+            }
+        }
+    });
+
+}
+
+function showLevelComplete() {
+    const levelCompleteDiv = document.createElement('div');
+    levelCompleteDiv.style.position = 'absolute';
+    levelCompleteDiv.style.top = '50%';
+    levelCompleteDiv.style.left = '50%';
+    levelCompleteDiv.style.transform = 'translate(-50%, -50%)';
+    levelCompleteDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    levelCompleteDiv.style.color = 'white';
+    levelCompleteDiv.style.padding = '20px';
+    levelCompleteDiv.style.borderRadius = '10px';
+    levelCompleteDiv.style.textAlign = 'center';
+    levelCompleteDiv.innerHTML = `
+        <h2>Level Complete!</h2>
+        <p>All coins collected!</p>
+        <button id="nextLevelButton" style="padding: 10px; margin-top: 10px;">Next Level</button>
+    `;
+    
+    gameContainer.appendChild(levelCompleteDiv);
+    
+    document.getElementById('nextLevelButton').addEventListener('click', () => {
+        gameContainer.removeChild(levelCompleteDiv);
+        loadNextLevel();
+    });
+}
+
+function loadNextLevel() {
+    // Cycle through maps
+    const maps = Object.keys(GAME_MAPS);
+    const currentIndex = maps.indexOf(currentMap);
+    const nextIndex = (currentIndex + 1) % maps.length;
+    currentMap = maps[nextIndex];
+    
+    // Reset the game with new map
+    mazeLayout = GAME_MAPS[currentMap];
+    restartGame();
 }
