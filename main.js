@@ -791,12 +791,47 @@ function gameOver() {
 }
 
 function restartGame() {
-    // Limpar a cena
+    // Stop the animation loop
+    gameActive = false;
+
+    // Remove old renderer elements
+    gameContainer.removeChild(renderer.domElement);
+    document.getElementById('topViewContainer').removeChild(topViewRenderer.domElement);
+    document.getElementById('secondaryViewContainer').removeChild(secondaryRenderer.domElement);
+
+    // Dispose renderers
+    renderer.dispose();
+    topViewRenderer.dispose();
+    secondaryRenderer.dispose();
+
+    // Remove event listeners
+    document.removeEventListener('keydown', onKeyDown);
+    document.removeEventListener('keyup', onKeyUp);
+    window.removeEventListener('resize', onWindowResize);
+    
+    // Clear all game objects
     while(scene.children.length > 0) { 
-        scene.remove(scene.children[0]); 
+        const object = scene.children[0];
+        if (object.geometry) object.geometry.dispose();
+        if (object.material) {
+            if (Array.isArray(object.material)) {
+                object.material.forEach(material => material.dispose());
+            } else {
+                object.material.dispose();
+            }
+        }
+        scene.remove(object);
     }
     
-    // Resetar variáveis
+    // Clear secondary and top view scenes
+    while(secondaryScene.children.length > 0) {
+        secondaryScene.remove(secondaryScene.children[0]);
+    }
+    while(topViewScene.children.length > 0) {
+        topViewScene.remove(topViewScene.children[0]);
+    }
+    
+    // Reset all game states
     bombs = [];
     explosions = [];
     rats = [];
@@ -807,13 +842,40 @@ function restartGame() {
     canMove = true;
     playerSpeed2 = 1.0;
     isSpeedBoosted = false;
+    collectedCoins = 0;
+    totalCoins = 0;
+    moveForward = false;
+    moveBackward = false;
+    moveLeft = false;
+    moveRight = false;
     
+    // Clear timeouts
     if (speedBoostTimeout) {
         clearTimeout(speedBoostTimeout);
+        speedBoostTimeout = null;
     }
     
-    // Reiniciar o jogo
+    // Clear scene references
+    player = null;
+    arena = null;
+    topViewPlayer = null;
+    topViewArena = null;
+    
+    // Reset player lives if starting fresh game
+    if (isGameOver) {
+        playerLives = 3;
+        isGameOver = false;
+    }
+    
+    // Create fresh scenes
+    scene = new THREE.Scene();
+    secondaryScene = new THREE.Scene();
+    topViewScene = new THREE.Scene();
+    
+    // Reinitialize game
+    gameActive = true;
     init();
+    updateHUD();
 }
 
 function createGrid() {
