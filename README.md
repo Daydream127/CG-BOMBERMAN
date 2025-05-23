@@ -2,7 +2,7 @@
   <img src="https://github.com/user-attachments/assets/758ebeaf-f40b-427b-9aba-7c1d9bed28f8">  
 </div>
 
----
+# Bomboclat ![build status](https://github.com/Daydream127/CG-BOMBERMAN/actions/workflows/node.js.yml/badge.svg)
 
 > [!IMPORTANT]
 > Este projeto foi desenvolvido para ser utilizado com Node.js; usar a função Go Live do Visual Studio Code pode causar erros. <br>
