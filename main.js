@@ -565,27 +565,79 @@ function updateHUD() {
 }
 
 function init() {
+    // Scene setup with improved background
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87CEEB); 
+    scene.background = new THREE.Color(0x87CEEB);
 
-const aspect = window.innerWidth / window.innerHeight;
-camera = new THREE.OrthographicCamera(
-    -arenaSize * aspect / 2,
-    arenaSize * aspect / 2,
-    arenaSize / 2,
-    -arenaSize / 2,
-    1, 1000
-);
-
+    // Camera setup
+    const aspect = window.innerWidth / window.innerHeight;
+    camera = new THREE.OrthographicCamera(
+        -arenaSize * aspect / 2,
+        arenaSize * aspect / 2,
+        arenaSize / 2,
+        -arenaSize / 2,
+        1, 1000
+    );
     camera.add(listener);
-camera.position.set(arenaSize, arenaSize, arenaSize);
-camera.lookAt(0, 0, 0);
+    camera.position.set(arenaSize, arenaSize, arenaSize);
+    camera.lookAt(0, 0, 0);
 
-    renderer = new THREE.WebGLRenderer({ antialias: true });
+    // Enhanced renderer setup
+    renderer = new THREE.WebGLRenderer({ 
+        antialias: true,
+        logarithmicDepthBuffer: true
+    });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
     gameContainer.appendChild(renderer.domElement);
 
+    // Lighting setup
+    // Soft ambient light
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    scene.add(ambientLight);
+
+    // Main sun light
+    const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    sunLight.position.set(20, 30, 20);
+    sunLight.castShadow = true;
+    
+    // Enhanced shadow settings
+    sunLight.shadow.mapSize.width = 2048;
+    sunLight.shadow.mapSize.height = 2048;
+    sunLight.shadow.camera.near = 0.5;
+    sunLight.shadow.camera.far = 100;
+    sunLight.shadow.camera.left = -arenaSize;
+    sunLight.shadow.camera.right = arenaSize;
+    sunLight.shadow.camera.top = arenaSize;
+    sunLight.shadow.camera.bottom = -arenaSize;
+    sunLight.shadow.bias = -0.001;
+    sunLight.shadow.normalBias = 0.02;
+    scene.add(sunLight);
+
+    // Fill light
+    const fillLight = new THREE.DirectionalLight(0x8fb4d6, 0.3);
+    fillLight.position.set(-20, 20, -20);
+    scene.add(fillLight);
+
+    // Rim light
+    const rimLight = new THREE.DirectionalLight(0xfff0dd, 0.2);
+    rimLight.position.set(0, 10, -20);
+    scene.add(rimLight);
+
+    // Point lights for atmosphere
+    const pointLight1 = new THREE.PointLight(0xffcc77, 0.2, 20);
+    pointLight1.position.set(arenaSize/2, 5, arenaSize/2);
+    scene.add(pointLight1);
+
+    const pointLight2 = new THREE.PointLight(0x77ccff, 0.2, 20);
+    pointLight2.position.set(-arenaSize/2, 5, -arenaSize/2);
+    scene.add(pointLight2);
+
+    // Top view setup
     topViewScene = new THREE.Scene();
     topViewScene.background = new THREE.Color(0x000000);
 
@@ -596,61 +648,49 @@ camera.lookAt(0, 0, 0);
         -arenaSize / 2,
         1, 1000
     );
-
     topViewCamera.position.set(0, 30, 0);
     topViewCamera.lookAt(0, 0, 0);
-    topViewCamera.rotation.z = 0; 
+    topViewCamera.rotation.z = 0;
+    
     topViewRenderer = new THREE.WebGLRenderer({ antialias: true });
     topViewRenderer.setSize(200, 200);
     topViewRenderer.shadowMap.enabled = true;
     document.getElementById('topViewContainer').appendChild(topViewRenderer.domElement);
 
-
+    // Secondary view setup
     secondaryScene = new THREE.Scene();
     secondaryScene.background = new THREE.Color(0x000000);
 
-secondaryCamera = new THREE.OrthographicCamera(
-    -arenaSize / 2,
-    arenaSize / 2,
-    arenaSize / 2,
-    -arenaSize / 2,
-    1, 1000
-);
-
-secondaryCamera.position.set(0, 30, 0);
-secondaryCamera.lookAt(0, 0, 0);
-secondaryCamera.rotation.z = 0; 
+    secondaryCamera = new THREE.OrthographicCamera(
+        -arenaSize / 2,
+        arenaSize / 2,
+        arenaSize / 2,
+        -arenaSize / 2,
+        1, 1000
+    );
+    secondaryCamera.position.set(0, 30, 0);
+    secondaryCamera.lookAt(0, 0, 0);
+    secondaryCamera.rotation.z = 0;
+    
     secondaryRenderer = new THREE.WebGLRenderer({ antialias: true });
     secondaryRenderer.setSize(200, 200);
     secondaryRenderer.shadowMap.enabled = true;
     document.getElementById('secondaryViewContainer').appendChild(secondaryRenderer.domElement);
 
-
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-    scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
-    directionalLight.position.set(20, 30, 20);
-    directionalLight.castShadow = true;
-    directionalLight.shadow.camera.left = -arenaSize;
-    directionalLight.shadow.camera.right = arenaSize;
-    directionalLight.shadow.camera.top = arenaSize;
-    directionalLight.shadow.camera.bottom = -arenaSize;
-    scene.add(directionalLight);
-
+    // Create game elements
     createArena();
     createTopViewArena();
-    createCoins(); // Add this line
+    createCoins();
     createPlayer();
     createTopViewPlayer();
-        initializeRats(); 
+    initializeRats();
 
-
+    // Event listeners
     document.addEventListener('keydown', onKeyDown, false);
     document.addEventListener('keyup', onKeyUp, false);
-
     window.addEventListener('resize', onWindowResize, false);
 
+    // Start animation loop
     animate();
 }
 
@@ -1674,6 +1714,7 @@ function animate() {
     requestAnimationFrame(animate);
 
     if (gameActive) {
+        updateLighting();
         const currentTime = Date.now();
         bombs.forEach(bomb => {
             const scale = 1 + 0.1 * Math.sin((currentTime - bomb.timer) / 200);
@@ -1962,4 +2003,33 @@ function loadNextLevel() {
     // Reset the game with new map
     mazeLayout = GAME_MAPS[currentMap];
     restartGame();
+}
+
+
+function updateLighting() {
+    const cycleDuration = 300000; // 5 minutos por ciclo completo
+    const time = Date.now() % cycleDuration;
+    const cycleProgress = time / cycleDuration;
+    const angle = cycleProgress * Math.PI * 2;
+
+    // Atualiza posição do sol
+    const sunRadius = 50;
+    const sunHeight = Math.sin(angle) * 20 + 30;
+    const sunLight = scene.children.find(child => child.isDirectionalLight);
+    if (sunLight) {
+        sunLight.position.x = Math.cos(angle) * sunRadius;
+        sunLight.position.y = sunHeight;
+        sunLight.position.z = Math.sin(angle) * sunRadius;
+        
+        // Ajusta intensidade baseada na altura do sol
+        const normalizedHeight = (sunHeight + 20) / 50; // normaliza entre 0 e 1
+        sunLight.intensity = Math.max(0.2, normalizedHeight * 0.8);
+    }
+
+    // Ajusta cor do céu baseado no ciclo
+    const dayColor = new THREE.Color(0x87CEEB);
+    const nightColor = new THREE.Color(0x1a2b4c);
+    const skyColor = new THREE.Color();
+    skyColor.lerpColors(nightColor, dayColor, Math.max(0, Math.sin(angle)));
+    scene.background = skyColor;
 }
