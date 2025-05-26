@@ -689,7 +689,7 @@ function init() {
     createTopViewPlayer();
     initializeRats();
         createClock();
-    gameStartTime = Date.now() - (cycleDuration / 4);
+    gameStartTime = Date.now() - (cycleDuration / 3);
 
     // Event listeners
     document.addEventListener('keydown', onKeyDown, false);
@@ -871,7 +871,7 @@ function restartGame() {
     document.removeEventListener('keyup', onKeyUp);
     window.removeEventListener('resize', onWindowResize);
 
-        gameStartTime = Date.now() - (cycleDuration / 4); // Reset game time
+        gameStartTime = Date.now() - (cycleDuration / 3); // Reset game time
     if (clockElement) {
         gameContainer.removeChild(clockElement);
     }
