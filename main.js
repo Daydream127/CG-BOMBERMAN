@@ -241,6 +241,22 @@ const MAP_MODELS = {
 };
 
 
+const WALL_TEXTURES = {
+    classic: {
+        sides: 'assets/textures/greenbrick.png',
+        top: 'assets/textures/grass.png'
+    },
+    maze: {
+        sides: 'assets/textures/grass.png',
+        top: 'assets/textures/grass.png'
+    },
+    arena: {
+        sides: 'assets/textures/metal_arena.png',
+        top: 'assets/textures/metal_arena_top.png'
+    }
+};
+
+
  
 
 
@@ -901,17 +917,47 @@ function createGrid() {
 }
 
 function createMazeBlocks() {
-    const blockGeometry = new THREE.BoxGeometry(cellSize * 0.9, wallHeight, cellSize * 0.9);
-    const blockMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+    // Carrega as texturas para o mapa atual
+    const wallTextures = {
+        sides: textureLoader.load(WALL_TEXTURES[currentMap].sides),
+        top: textureLoader.load(WALL_TEXTURES[currentMap].top)
+    };
+
+    // Configura repetição das texturas
+    wallTextures.sides.wrapS = wallTextures.sides.wrapT = THREE.RepeatWrapping;
+    wallTextures.top.wrapS = wallTextures.top.wrapT = THREE.RepeatWrapping;
+
+    // Cria materiais para os diferentes lados do bloco
+    const wallMaterials = [
+        new THREE.MeshLambertMaterial({ map: wallTextures.sides }), // direita
+        new THREE.MeshLambertMaterial({ map: wallTextures.sides }), // esquerda
+        new THREE.MeshLambertMaterial({ map: wallTextures.top }),   // topo
+        new THREE.MeshLambertMaterial({ map: wallTextures.sides }), // baixo
+        new THREE.MeshLambertMaterial({ map: wallTextures.sides }), // frente
+        new THREE.MeshLambertMaterial({ map: wallTextures.sides })  // trás
+    ];
+
+    // Geometria do bloco sem espaços
+    const blockGeometry = new THREE.BoxGeometry(cellSize, wallHeight, cellSize);
 
     for (let z = 0; z < gridSize; z++) {
         for (let x = 0; x < gridSize; x++) {
             if (mazeLayout[z][x] === 1) {
-                const block = new THREE.Mesh(blockGeometry, blockMaterial);
+                const block = new THREE.Mesh(blockGeometry, wallMaterials);
                 const worldPos = gridToWorld(x, z);
                 block.position.set(worldPos.x, wallHeight/2, worldPos.z);
                 block.castShadow = true;
                 block.receiveShadow = true;
+
+                // Ajusta as coordenadas UV para repetição correta das texturas
+                const uvAttribute = block.geometry.attributes.uv;
+                for (let i = 0; i < uvAttribute.count; i++) {
+                    uvAttribute.setXY(i, 
+                        uvAttribute.getX(i) * 1, // Ajuste o multiplicador para controlar a repetição
+                        uvAttribute.getY(i) * (wallHeight/cellSize) // Ajusta baseado na proporção altura/largura
+                    );
+                }
+
                 arena.add(block);
             }
             else if (mazeLayout[z][x] === 2) {
@@ -1208,9 +1254,29 @@ function createTopViewMazeBlocks() {
 }
 
 function createWall(width, height, depth) {
+    const wallTextures = {
+        sides: textureLoader.load(WALL_TEXTURES[currentMap].sides),
+        top: textureLoader.load(WALL_TEXTURES[currentMap].top)
+    };
+
+    wallTextures.sides.wrapS = wallTextures.sides.wrapT = THREE.RepeatWrapping;
+    wallTextures.top.wrapS = wallTextures.top.wrapT = THREE.RepeatWrapping;
+
+    // Ajusta a repetição das texturas baseado no tamanho da parede
+    wallTextures.sides.repeat.set(width/cellSize, height/cellSize);
+    wallTextures.top.repeat.set(width/cellSize, depth/cellSize);
+
+    const wallMaterials = [
+        new THREE.MeshLambertMaterial({ map: wallTextures.sides }), // direita
+        new THREE.MeshLambertMaterial({ map: wallTextures.sides }), // esquerda
+        new THREE.MeshLambertMaterial({ map: wallTextures.top }),   // topo
+        new THREE.MeshLambertMaterial({ map: wallTextures.sides }), // baixo
+        new THREE.MeshLambertMaterial({ map: wallTextures.sides }), // frente
+        new THREE.MeshLambertMaterial({ map: wallTextures.sides })  // trás
+    ];
+
     const geometry = new THREE.BoxGeometry(width, height, depth);
-    const material = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
-    const wall = new THREE.Mesh(geometry, material);
+    const wall = new THREE.Mesh(geometry, wallMaterials);
     wall.castShadow = true;
     wall.receiveShadow = true;
     return wall;
