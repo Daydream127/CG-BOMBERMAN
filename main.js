@@ -13,6 +13,10 @@ const gameContainer = document.getElementById('gameContainer');
 const playButton = document.getElementById('playButton');
 const creditsButton = document.getElementById('creditsButton');
 const backButton = document.getElementById('backButton');
+const cycleDuration = 300000; // 5 minutos por ciclo completo
+let gameStartTime = Date.now();
+let clockElement;
+
 
 playButton.addEventListener('click', startGame);
 creditsButton.addEventListener('click', showCredits);
@@ -684,6 +688,8 @@ function init() {
     createPlayer();
     createTopViewPlayer();
     initializeRats();
+        createClock();
+    gameStartTime = Date.now() - (cycleDuration / 4);
 
     // Event listeners
     document.addEventListener('keydown', onKeyDown, false);
@@ -864,6 +870,11 @@ function restartGame() {
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('keyup', onKeyUp);
     window.removeEventListener('resize', onWindowResize);
+
+        gameStartTime = Date.now() - (cycleDuration / 4); // Reset game time
+    if (clockElement) {
+        gameContainer.removeChild(clockElement);
+    }
     
     // Clear all game objects
     while(scene.children.length > 0) { 
@@ -1715,6 +1726,7 @@ function animate() {
 
     if (gameActive) {
         updateLighting();
+        updateClock();
         const currentTime = Date.now();
         bombs.forEach(bomb => {
             const scale = 1 + 0.1 * Math.sin((currentTime - bomb.timer) / 200);
@@ -2032,4 +2044,46 @@ function updateLighting() {
     const skyColor = new THREE.Color();
     skyColor.lerpColors(nightColor, dayColor, Math.max(0, Math.sin(angle)));
     scene.background = skyColor;
+}
+
+
+function createClock() {
+    clockElement = document.createElement('div');
+    clockElement.style.position = 'absolute';
+    clockElement.style.top = '10px';
+    clockElement.style.right = '10px';
+    clockElement.style.color = 'white';
+    clockElement.style.fontSize = '24px';
+    clockElement.style.fontFamily = 'Arial, sans-serif';
+    clockElement.style.padding = '5px 10px';
+    clockElement.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    clockElement.style.borderRadius = '5px';
+    gameContainer.appendChild(clockElement);
+}
+
+function updateClock() {
+    const time = Date.now() - gameStartTime;
+    const cycleProgress = (time % cycleDuration) / cycleDuration;
+    
+    // Converte o progresso do ciclo em horas (24 horas por ciclo)
+    const totalHours = cycleProgress * 24;
+    const hours = Math.floor(totalHours);
+    const minutes = Math.floor((totalHours - hours) * 60);
+    
+    // Formata o tempo com zeros à esquerda
+    const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    
+    // Determina o período do dia
+    let period;
+    if (hours >= 5 && hours < 12) {
+        period = '🌅 Manhã';
+    } else if (hours >= 12 && hours < 18) {
+        period = '☀️ Tarde';
+    } else if (hours >= 18 && hours < 21) {
+        period = '🌇 Anoitecer';
+    } else {
+        period = '🌙 Noite';
+    }
+    
+    clockElement.textContent = `${timeString} - ${period}`;
 }
