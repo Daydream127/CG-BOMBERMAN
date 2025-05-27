@@ -17,6 +17,17 @@ const cycleDuration = 300000; // 5 minutos por ciclo completo
 let gameStartTime = Date.now();
 let clockElement;
 
+let lightControls;
+let lightReferences = {
+    ambient: null,
+    sun: null,
+    fill: null,
+    rim: null,
+    point1: null,
+    point2: null
+};
+let lightControlsVisible = false;
+
 
 playButton.addEventListener('click', startGame);
 creditsButton.addEventListener('click', showCredits);
@@ -637,7 +648,7 @@ function init() {
 
     // Lighting setup
     // Soft ambient light
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
     scene.add(ambientLight);
 
     // Main sun light
@@ -717,6 +728,14 @@ function init() {
     secondaryRenderer.shadowMap.enabled = true;
     document.getElementById('secondaryViewContainer').appendChild(secondaryRenderer.domElement);
 
+    lightReferences.ambient = ambientLight;
+    lightReferences.sun = sunLight;
+    lightReferences.fill = fillLight;
+    lightReferences.rim = rimLight;
+    lightReferences.point1 = pointLight1;
+    lightReferences.point2 = pointLight2;
+
+
     // Create game elements
     createArena();
     createTopViewArena();
@@ -724,6 +743,8 @@ function init() {
     createPlayer();
     createTopViewPlayer();
     initializeRats();
+        createLightControlPanel();
+
         createClock();
     gameStartTime = Date.now() - (cycleDuration / 3);
 
@@ -1582,6 +1603,11 @@ function onKeyDown(event) {
     let willMove = false;
     
     switch (event.code) {
+                case 'KeyL':
+            // Toggle light controls panel
+            lightControlsVisible = !lightControlsVisible;
+            lightControls.style.display = lightControlsVisible ? 'block' : 'none';
+            break;
         case 'KeyC': 
             switchCamera();
             break;
@@ -2125,4 +2151,96 @@ function updateClock() {
     }
     
     clockElement.textContent = `${timeString} - ${period}`;
+}
+
+
+function createLightControlPanel() {
+    // Create the main container
+    lightControls = document.createElement('div');
+    lightControls.style.position = 'absolute';
+    lightControls.style.bottom = '10px';
+    lightControls.style.right = '10px';
+    lightControls.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    lightControls.style.padding = '10px';
+    lightControls.style.borderRadius = '5px';
+    lightControls.style.display = 'none'; // Hidden by default
+    lightControls.style.zIndex = '1000';
+    
+    // Create title
+    const title = document.createElement('div');
+    title.textContent = 'Light Controls';
+    title.style.color = 'white';
+    title.style.fontWeight = 'bold';
+    title.style.marginBottom = '10px';
+    title.style.textAlign = 'center';
+    lightControls.appendChild(title);
+    
+    // Create toggle buttons for each light
+    const lights = [
+        { id: 'ambient', name: 'Ambient Light', color: '#ffffff' },
+        { id: 'sun', name: 'Sun Light', color: '#ffff99' },
+        { id: 'fill', name: 'Fill Light', color: '#8fb4d6' },
+        { id: 'rim', name: 'Rim Light', color: '#fff0dd' },
+        { id: 'point1', name: 'Point Light 1', color: '#ffcc77' },
+        { id: 'point2', name: 'Point Light 2', color: '#77ccff' }
+    ];
+    
+    lights.forEach(light => {
+        const controlRow = document.createElement('div');
+        controlRow.style.display = 'flex';
+        controlRow.style.alignItems = 'center';
+        controlRow.style.marginBottom = '5px';
+        
+        const label = document.createElement('label');
+        label.textContent = light.name;
+        label.style.color = 'white';
+        label.style.flex = '1';
+        label.style.marginRight = '10px';
+        
+        const toggle = document.createElement('button');
+        toggle.id = `${light.id}-toggle`;
+        toggle.textContent = 'ON';
+        toggle.style.backgroundColor = light.color;
+        toggle.style.color = '#000';
+        toggle.style.border = 'none';
+        toggle.style.borderRadius = '3px';
+        toggle.style.padding = '5px 10px';
+        toggle.style.cursor = 'pointer';
+        toggle.dataset.state = 'on';
+        toggle.dataset.lightId = light.id;
+        toggle.dataset.color = light.color;
+        
+        toggle.addEventListener('click', toggleLight);
+        
+        controlRow.appendChild(label);
+        controlRow.appendChild(toggle);
+        lightControls.appendChild(controlRow);
+    });
+    
+    gameContainer.appendChild(lightControls);
+}
+
+
+function toggleLight(event) {
+    const button = event.target;
+    const lightId = button.dataset.lightId;
+    const currentState = button.dataset.state;
+    
+    if (!lightReferences[lightId]) return;
+    
+    if (currentState === 'on') {
+        // Turn light off
+        lightReferences[lightId].visible = false;
+        button.textContent = 'OFF';
+        button.style.backgroundColor = '#333';
+        button.style.color = '#fff';
+        button.dataset.state = 'off';
+    } else {
+        // Turn light on
+        lightReferences[lightId].visible = true;
+        button.textContent = 'ON';
+        button.style.backgroundColor = button.dataset.color;
+        button.style.color = '#000';
+        button.dataset.state = 'on';
+    }
 }
