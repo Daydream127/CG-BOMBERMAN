@@ -648,7 +648,7 @@ function init() {
 
     // Lighting setup
     // Soft ambient light
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
     scene.add(ambientLight);
 
     // Main sun light
@@ -680,12 +680,12 @@ function init() {
     scene.add(rimLight);
 
     // Point lights for atmosphere
-    const pointLight1 = new THREE.PointLight(0xffcc77, 0.2, 20);
-    pointLight1.position.set(arenaSize/2, 5, arenaSize/2);
+    const pointLight1 = new THREE.PointLight(0xffcc77, 5, 30);
+    pointLight1.position.set(arenaSize/3, 5, arenaSize/3);
     scene.add(pointLight1);
 
-    const pointLight2 = new THREE.PointLight(0x77ccff, 0.2, 20);
-    pointLight2.position.set(-arenaSize/2, 5, -arenaSize/2);
+    const pointLight2 = new THREE.PointLight(0x77ccff, 5, 30);
+    pointLight2.position.set(-arenaSize/3, 5, -arenaSize/3);
     scene.add(pointLight2);
 
     // Top view setup
@@ -917,6 +917,7 @@ function gameOver() {
 }
 
 function restartGame() {
+    
     // Stop the animation loop
     gameActive = false;
 
@@ -1157,14 +1158,49 @@ function createRat(gridX, gridZ) {
     };
 }
 function initializeRats() {
+    // Clear any existing rats
+    rats = [];
+    
+    const validPositions = [];
+    
+    // Find all empty cells
     for (let z = 0; z < gridSize; z++) {
         for (let x = 0; x < gridSize; x++) {
-            if (mazeLayout[z][x] === 3) {
-                mazeLayout[z][x] = 0; 
-                const rat = createRat(x, z);
-                rats.push(rat);
+            if (mazeLayout[z][x] === 0) {
+                // Store position as an object
+                validPositions.push({x, z});
             }
         }
+    }
+    
+    // Filter positions that are too close to player starting position
+    const playerStartPos = {x: currentGridX, z: currentGridZ};
+    const safeDistance = 4; // Minimum cells away from player
+    const safePositions = validPositions.filter(pos => {
+        const distance = Math.sqrt(
+            Math.pow(pos.x - playerStartPos.x, 2) + 
+            Math.pow(pos.z - playerStartPos.z, 2)
+        );
+        return distance >= safeDistance;
+    });
+    
+    // Choose positions for rats (either safe or all valid if not enough safe ones)
+    const positionsToUse = safePositions.length >= 4 ? safePositions : validPositions;
+    
+    // Create exactly 4 rats
+    for (let i = 0; i < 4; i++) {
+        if (positionsToUse.length === 0) break; // Safety check
+        
+        // Select random position from available positions
+        const randomIndex = Math.floor(Math.random() * positionsToUse.length);
+        const position = positionsToUse[randomIndex];
+        
+        // Remove selected position so we don't use it again
+        positionsToUse.splice(randomIndex, 1);
+        
+        // Create rat at chosen position
+        const rat = createRat(position.x, position.z);
+        rats.push(rat);
     }
 
     setInterval(moveRats, RAT_MOVE_INTERVAL);
@@ -1978,7 +2014,7 @@ function createCoins() {
         for (let x = 0; x < gridSize; x++) {
             if (mazeLayout[z][x] === 0) {
                 // Add coin with 30% probability if space is empty
-                if (Math.random() < 0.1) {
+                if (Math.random() < 0.05) {
                     const worldPos = gridToWorld(x, z);
                     const coinGroup = new THREE.Group();
                     coinGroup.position.set(worldPos.x, wallHeight/2, worldPos.z);
