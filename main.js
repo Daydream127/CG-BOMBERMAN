@@ -174,6 +174,13 @@ const GAME_MAPS = {
 let currentMap = 'classic';
 let mazeLayout = GAME_MAPS[currentMap];
 
+
+const PLAYER_TEXTURES = {
+    hat: 'assets/textures/player/hat.jpg',
+    shirt: 'assets/textures/player/shirt.jpg',
+    pants: 'assets/textures/player/pant.jpg'
+};
+
 const MAP_MODELS = {
     classic: {
         destructible: [
@@ -1440,76 +1447,60 @@ function createTopViewWall(width, height, depth, color) {
 function createPlayer() {
     player = new THREE.Group();
 
+    // Carrega as texturas
+    const hatTexture = textureLoader.load(PLAYER_TEXTURES.hat);
+    const shirtTexture = textureLoader.load(PLAYER_TEXTURES.shirt);
+    const pantsTexture = textureLoader.load(PLAYER_TEXTURES.pants);
+
+    // Configura as texturas
+    [hatTexture, shirtTexture, pantsTexture].forEach(texture => {
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(1, 1);
+    });
+
+    // Corpo com textura de camisa
     const bodyGeometry = new THREE.BoxGeometry(0.8, 1.0, 0.4);
-    const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x3333ff });
+    const bodyMaterial = new THREE.MeshLambertMaterial({ 
+        map: shirtTexture,
+        side: THREE.DoubleSide
+    });
     const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
     body.position.y = 0.8;
     body.castShadow = true;
 
+    // Cabeça permanece com a cor da pele
     const headGeometry = new THREE.SphereGeometry(0.4, 16, 16);
     const headMaterial = new THREE.MeshLambertMaterial({ color: 0xffcc99 });
     const head = new THREE.Mesh(headGeometry, headMaterial);
     head.position.y = 1.5;
     head.castShadow = true;
 
-    // Eyes
-const eyeGeometry = new THREE.SphereGeometry(0.08, 8, 8);
-    const eyeMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
-    const eyeballMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
-
-    // Left eye
-    const leftEye = new THREE.Group();
-    const leftEyeWhite = new THREE.Mesh(eyeGeometry, eyeMaterial);
-    const leftEyeball = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), eyeballMaterial);
-    leftEyeball.position.z = -0.05;  // Changed from 0.05 to -0.05
-    leftEye.add(leftEyeWhite);
-    leftEye.add(leftEyeball);
-    leftEye.position.set(-0.15, 1.6, -0.35);  // Changed from 0.35 to -0.35
-    
-    // Right eye
-    const rightEye = new THREE.Group();
-    const rightEyeWhite = new THREE.Mesh(eyeGeometry, eyeMaterial);
-    const rightEyeball = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), eyeballMaterial);
-    rightEyeball.position.z = -0.05;  // Changed from 0.05 to -0.05
-    rightEye.add(rightEyeWhite);
-    rightEye.add(rightEyeball);
-    rightEye.position.set(0.15, 1.6, -0.35);  // Changed from 0.35 to -0.35
-
-    // Mouth
-    const mouthGeometry = new THREE.TorusGeometry(0.1, 0.02, 8, 12, Math.PI);
-    const mouthMaterial = new THREE.MeshLambertMaterial({ color: 0x333333 });
-    const mouth = new THREE.Mesh(mouthGeometry, mouthMaterial);
-    mouth.position.set(0, 1.35, -0.38); // Ajustado Y e Z para posicionar corretamente
-    mouth.rotation.x = 0; // Remove a rotação no eixo X
-    mouth.rotation.z = Math.PI; // Mantém a rotação em Z para orientação correta
-
-    // Cowboy Hat
+    // Chapéu com textura própria
     const hatGroup = new THREE.Group();
+    const hatMaterial = new THREE.MeshLambertMaterial({ 
+        map: hatTexture,
+        side: THREE.DoubleSide
+    });
     
-    // Hat brim
+    // Aba do chapéu
     const brimGeometry = new THREE.CylinderGeometry(0.6, 0.6, 0.05, 32);
-    const hatMaterial = new THREE.MeshLambertMaterial({ color: 0x4A3C2B });
     const brim = new THREE.Mesh(brimGeometry, hatMaterial);
     brim.position.y = 1.9;
     
-    // Hat crown
+    // Copa do chapéu
     const crownGeometry = new THREE.CylinderGeometry(0.3, 0.35, 0.3, 32);
     const crown = new THREE.Mesh(crownGeometry, hatMaterial);
     crown.position.y = 2.05;
     
-    // Hat band
-    const bandGeometry = new THREE.CylinderGeometry(0.32, 0.32, 0.08, 32);
-    const bandMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
-    const band = new THREE.Mesh(bandGeometry, bandMaterial);
-    band.position.y = 1.95;
-
     hatGroup.add(brim);
     hatGroup.add(crown);
-    hatGroup.add(band);
 
-    // Arms
+    // Braços com textura de camisa
     const armGeometry = new THREE.BoxGeometry(0.2, 0.6, 0.2);
-    const armMaterial = new THREE.MeshLambertMaterial({ color: 0x3333ff });
+    const armMaterial = new THREE.MeshLambertMaterial({ 
+        map: shirtTexture,
+        side: THREE.DoubleSide
+    });
     
     const leftArm = new THREE.Mesh(armGeometry, armMaterial);
     leftArm.position.set(-0.5, 0.9, 0);
@@ -1519,9 +1510,12 @@ const eyeGeometry = new THREE.SphereGeometry(0.08, 8, 8);
     rightArm.position.set(0.5, 0.9, 0);
     rightArm.castShadow = true;
 
-    // Legs
+    // Pernas com textura de calça
     const legGeometry = new THREE.BoxGeometry(0.25, 0.7, 0.25);
-    const legMaterial = new THREE.MeshLambertMaterial({ color: 0x2222aa });
+    const legMaterial = new THREE.MeshLambertMaterial({ 
+        map: pantsTexture,
+        side: THREE.DoubleSide
+    });
     
     const leftLegGroup = new THREE.Group();
     const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
@@ -1535,17 +1529,48 @@ const eyeGeometry = new THREE.SphereGeometry(0.08, 8, 8);
     rightLegGroup.position.set(0.3, 0.3, 0);
     rightLegGroup.add(rightLeg);
 
+    // Adiciona olhos e boca
+    // Eyes
+    const eyeGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+    const eyeMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
+    const eyeballMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
+
+    const leftEye = new THREE.Group();
+    const leftEyeWhite = new THREE.Mesh(eyeGeometry, eyeMaterial);
+    const leftEyeball = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), eyeballMaterial);
+    leftEyeball.position.z = -0.05;
+    leftEye.add(leftEyeWhite);
+    leftEye.add(leftEyeball);
+    leftEye.position.set(-0.15, 1.6, -0.35);
+    
+    const rightEye = new THREE.Group();
+    const rightEyeWhite = new THREE.Mesh(eyeGeometry, eyeMaterial);
+    const rightEyeball = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), eyeballMaterial);
+    rightEyeball.position.z = -0.05;
+    rightEye.add(rightEyeWhite);
+    rightEye.add(rightEyeball);
+    rightEye.position.set(0.15, 1.6, -0.35);
+
+    // Mouth
+    const mouthGeometry = new THREE.TorusGeometry(0.1, 0.02, 8, 12, Math.PI);
+    const mouthMaterial = new THREE.MeshLambertMaterial({ color: 0x333333 });
+    const mouth = new THREE.Mesh(mouthGeometry, mouthMaterial);
+    mouth.position.set(0, 1.35, -0.38);
+    mouth.rotation.z = Math.PI;
+
+    // Adiciona todas as partes ao grupo principal
     player.add(body);
     player.add(head);
-    player.add(leftEye);
-    player.add(rightEye);
-    player.add(mouth);
     player.add(hatGroup);
     player.add(leftArm);
     player.add(rightArm);
     player.add(leftLegGroup);
     player.add(rightLegGroup);
+    player.add(leftEye);
+    player.add(rightEye);
+    player.add(mouth);
 
+    // Mantém referências para animação
     player.userData = {
         leftArm,
         rightArm,
@@ -1555,6 +1580,7 @@ const eyeGeometry = new THREE.SphereGeometry(0.08, 8, 8);
         walkingTime: 0
     };
 
+    // Posiciona o jogador
     const initialPos = gridToWorld(currentGridX, currentGridZ);
     player.position.set(initialPos.x, 0, initialPos.z);
 
