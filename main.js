@@ -119,7 +119,7 @@ const playerSpeed = 1.0;
 
 const GAME_MAPS = {
     classic: [
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 1, 1, 2, 0, 0, 1, 1, 1, 0, 1, 1, 2, 1, 0],
         [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
         [0, 2, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 2, 0],
@@ -142,9 +142,9 @@ const GAME_MAPS = {
         [0, 1, 1, 2, 0, 0, 0, 2, 0, 0, 0, 2, 1, 1, 0],
         [0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0],
         [1, 2, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 2, 1],
-        [0, 0, 0, 0, 1, 0, 3, 2, 3, 0, 1, 0, 0, 0, 0],
+        [0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 1, 0, 0, 0, 0],
         [0, 1, 1, 2, 0, 0, 2, 1, 2, 0, 0, 2, 1, 1, 0],
-        [0, 0, 0, 0, 1, 0, 3, 2, 3, 0, 1, 0, 0, 0, 0],
+        [0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 1, 0, 0, 0, 0],
         [1, 2, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 2, 1],
         [0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0],
         [0, 1, 1, 2, 0, 0, 0, 2, 0, 0, 0, 2, 1, 1, 0],
@@ -153,14 +153,14 @@ const GAME_MAPS = {
         [0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0]
     ],
     arena: [
-        [1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1],
-        [1, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 1],
+        [0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1],
+        [0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 1],
         [1, 0, 1, 0, 1, 0, 1, 2, 1, 0, 1, 0, 1, 0, 1],
         [1, 2, 0, 2, 0, 2, 0, 0, 0, 2, 0, 2, 0, 2, 1],
         [1, 0, 1, 0, 1, 0, 1, 2, 1, 0, 1, 0, 1, 0, 1],
         [1, 0, 0, 2, 0, 2, 0, 0, 0, 2, 0, 2, 0, 0, 1],
         [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
-        [0, 0, 2, 0, 2, 0, 0, 3, 0, 0, 2, 0, 2, 0, 0],
+        [0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0],
         [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
         [1, 0, 0, 2, 0, 2, 0, 0, 0, 2, 0, 2, 0, 0, 1],
         [1, 0, 1, 0, 1, 0, 1, 2, 1, 0, 1, 0, 1, 0, 1],
@@ -219,8 +219,8 @@ const MAP_MODELS = {
             }
         ],
         rat: {
-                obj: '/assets/models/deer/deer.obj',
-                mtl: '/assets/models/deer/deer.mtl'
+            obj: '/assets/models/rat/rat.obj',
+            mtl: '/assets/models/rat/rat.mtl'
         },
                 coin: {
             obj: '/assets/models/coin/coin.obj',
@@ -230,12 +230,16 @@ const MAP_MODELS = {
     arena: {
         destructible: [
             {
-                obj: '/assets/models/caixacorreio/caixacorreio.obj',
-                mtl: '/assets/models/caixacorreio/caixacorreio.mtl'
+                obj: '/assets/models/bell/bell.obj',
+                mtl: '/assets/models/bell/bell.mtl'
+            },
+                        {
+                obj: '/assets/models/sacks/sacks.obj',
+                mtl: '/assets/models/sacks/sacks.mtl'
             },
             {
-                obj: '/assets/models/tree/tree.obj',
-                mtl: '/assets/models/tree/tree.mtl'
+                obj: '/assets/models/jar/jar.obj',
+                mtl: '/assets/models/jar/jar.mtl'
             }
         ],
         powerUps: [
@@ -245,8 +249,8 @@ const MAP_MODELS = {
             }
         ],
         rat: {
-            obj: '/assets/models/robot/robot.obj',
-            mtl: '/assets/models/robot/robot.mtl'
+            obj: '/assets/models/rat/rat.obj',
+            mtl: '/assets/models/rat/rat.mtl'
         },
                 coin: {
             obj: '/assets/models/coin/coin.obj',
@@ -273,36 +277,34 @@ const WALL_TEXTURES = {
     },
     maze: {
         floor: [
-            'assets/textures/maze_floor.png',
-            'assets/textures/stone_tiles.png',
-            'assets/textures/sand.png'
+            'assets/textures/maze/floor1.png',
+            'assets/textures/maze/floor2.png',
         ],
         sides: [
-            'assets/textures/hedge.png',
-            'assets/textures/maze_wall.png',
-            'assets/textures/dark_stone.png'
+            'assets/textures/maze/wall1.png',
+            'assets/textures/maze/wall2.png',
+            'assets/textures/maze/wall3.png'
         ],
         top: [
-            'assets/textures/hedge_top.png',
-            'assets/textures/marble.png',
-            'assets/textures/maze_top.png'
+            'assets/textures/maze/top1.png',
         ]
     },
     arena: {
         floor: [
-            'assets/textures/metal_floor.png',
-            'assets/textures/concrete.png',
-            'assets/textures/tech_floor.png'
+            'assets/textures/arena/floor1.png',
+
         ],
         sides: [
-            'assets/textures/metal_arena.png',
-            'assets/textures/panels.png',
-            'assets/textures/steel_wall.png'
+            'assets/textures/arena/wall1.png',
+            'assets/textures/arena/wall2.png',
+            'assets/textures/arena/wall3.png',
+                        'assets/textures/arena/wall4.png',
+            'assets/textures/arena/wall5.png'
+
         ],
         top: [
-            'assets/textures/metal_arena_top.png',
-            'assets/textures/tech_ceiling.png',
-            'assets/textures/grid_top.png'
+            'assets/textures/arena/top1.png',
+
         ]
     }
 };
