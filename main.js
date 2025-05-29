@@ -620,7 +620,7 @@ function updateHUD() {
 function init() {
     // Scene setup with improved background
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87CEEB);
+    scene.background = new THREE.Color(0x87CEEB); // Cor do céu durante o dia
 
     // Camera setup
     const aspect = window.innerWidth / window.innerHeight;
@@ -2123,9 +2123,10 @@ function loadNextLevel() {
 
 function updateLighting() {
     const cycleDuration = 300000; // 5 minutos por ciclo completo
-    const time = Date.now() % cycleDuration;
+    const time = (Date.now() - gameStartTime) % cycleDuration; // Usa gameStartTime como referência
     const cycleProgress = time / cycleDuration;
-    const angle = cycleProgress * Math.PI * 2;
+    // Ajusta o ângulo inicial para começar com o sol em uma posição específica (meio-dia)
+    const angle = (cycleProgress * Math.PI * 2) + (Math.PI / 2); // Adiciona PI/2 para começar ao meio-dia
 
     // Atualiza posição do sol
     const sunRadius = 50;
@@ -2148,7 +2149,6 @@ function updateLighting() {
     skyColor.lerpColors(nightColor, dayColor, Math.max(0, Math.sin(angle)));
     scene.background = skyColor;
 }
-
 
 function createClock() {
     clockElement = document.createElement('div');
