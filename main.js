@@ -29,34 +29,6 @@ let lightReferences = {
 let lightControlsVisible = false;
 
 
-playButton.addEventListener('click', startGame);
-creditsButton.addEventListener('click', showCredits);
-backButton.addEventListener('click', hideCredits);
-
-function startGame() {
-    const mapSelect = document.getElementById('mapSelect');
-    currentMap = mapSelect.value;
-    mazeLayout = GAME_MAPS[currentMap];
-    
-    menuContainer.style.display = 'none';
-    gameContainer.style.display = 'block';
-    gameActive = true;
-    isGameOver = false;
-    playerLives = 3;
-    updateHUD();
-    init();
-}
-
-function showCredits() {
-    menuContainer.style.display = 'none';
-    creditsContainer.style.display = 'flex';
-}
-
-function hideCredits() {
-    creditsContainer.style.display = 'none';
-    menuContainer.style.display = 'flex';
-}
-
 const arenaSize = 30;
 const wallHeight = 2;
 const gridSize = 15; 
@@ -171,7 +143,7 @@ const GAME_MAPS = {
     ]
 };
 
-let currentMap = 'classic';
+let currentMap = 'maze';
 let mazeLayout = GAME_MAPS[currentMap];
 
 
@@ -215,8 +187,8 @@ const MAP_MODELS = {
                 mtl: '/assets/models/flower01/Flower01-0.mtl'
             },
             {
-                obj: '/assets/models/flower01/Flower01-0.obj',
-                mtl: '/assets/models/flower01/Flower01-0.mtl'
+                obj: '/assets/models/deer/deer.obj',
+                mtl: '/assets/models/deer/deer.mtl'
             }
         ],
         powerUps: [
@@ -315,6 +287,37 @@ const WALL_TEXTURES = {
         ]
     }
 };
+
+
+playButton.addEventListener('click', startGame);
+creditsButton.addEventListener('click', showCredits);
+backButton.addEventListener('click', hideCredits);
+
+function startGame() {
+    const mapSelect = document.getElementById('mapSelect');
+    currentMap = mapSelect.value;
+    mazeLayout = GAME_MAPS[currentMap];
+    
+    menuContainer.style.display = 'none';
+    gameContainer.style.display = 'block';
+    gameActive = true;
+    isGameOver = false;
+    playerLives = 3;
+    updateHUD();
+    init();
+}
+
+function showCredits() {
+    menuContainer.style.display = 'none';
+    creditsContainer.style.display = 'flex';
+}
+
+function hideCredits() {
+    creditsContainer.style.display = 'none';
+    menuContainer.style.display = 'flex';
+}
+
+
 
 
  
@@ -1708,11 +1711,7 @@ function onKeyDown(event) {
                 willMove = true;
             }
             break;
-        case 'Escape': 
-            gameActive = false;
-            gameContainer.style.display = 'none';
-            menuContainer.style.display = 'flex';
-            break;
+
     }
 
     if (willMove) {
