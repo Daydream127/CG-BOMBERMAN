@@ -98,7 +98,7 @@ canvas {
     border: 3px solid #c30500;
     box-shadow: 4px 4px 0 #c30500;
 }
-#creditsContainer {
+#creditsContainer, #instructionsContainer, #mapsContainer {
     position: absolute;
     top: 0;
     left: 0;
@@ -112,7 +112,7 @@ canvas {
     color: white;
     display: none;
 }
-#creditsContent {
+#creditsContent, #instructionsContent, #mapsContent {
     width: 80%;
     max-width: 600px;
     text-align: center;
@@ -120,17 +120,17 @@ canvas {
     border-radius: 10px;
     background-color: rgba(255, 102, 0, 0.2);
 }
-#creditsTitle {
+#creditsTitle, #instructionsTitle, #mapsTitle {
     font-size: 2.5em;
     color: #ff6600;
     margin-bottom: 20px;
 }
-#creditsText {
+#creditsText, #instructionsText, #mapsText {
     font-size: 1.2em;
     line-height: 1.6;
     margin-bottom: 30px;
 }
-#backButton {
+#backButton, #instructionsBackButton, #mapsBackButton {
     background-color: #ff6600;
     color: white;
     border: none;
@@ -140,10 +140,12 @@ canvas {
     cursor: pointer;
     transition: all 0.3s;
 }
-#backButton:hover {
+#backButton:hover, #instructionsBackButton:hover, #mapsBackButton:hover {
     background-color: #ff9933;
     transform: scale(1.05);
 }
+
+
 #gameContainer {
     display: none; /* Inicialmente oculto */
 }

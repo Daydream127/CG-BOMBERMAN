@@ -9,10 +9,21 @@ let gameActive = false;
 
 const menuContainer = document.getElementById('menuContainer');
 const creditsContainer = document.getElementById('creditsContainer');
+const instructionsContainer = document.getElementById('instructionsContainer');
+const mapsContainer = document.getElementById('mapsContainer');
 const gameContainer = document.getElementById('gameContainer');
+
 const playButton = document.getElementById('playButton');
 const creditsButton = document.getElementById('creditsButton');
+const instructionsButton = document.getElementById('instructionsButton');
+const mapsButton = document.getElementById('mapsButton');
+
 const backButton = document.getElementById('backButton');
+const instructionsBackButton = document.getElementById('instructionsBackButton');
+const mapsBackButton = document.getElementById('mapsBackButton');
+const mapsPlayButton = document.getElementById('mapsPlayButton');
+
+
 const cycleDuration = 300000; // 5 minutos por ciclo completo
 let gameStartTime = Date.now();
 let clockElement;
@@ -290,8 +301,16 @@ const WALL_TEXTURES = {
 
 
 playButton.addEventListener('click', startGame);
+mapsPlayButton.addEventListener('click', () => {hideMaps(); startGame();});
+
 creditsButton.addEventListener('click', showCredits);
 backButton.addEventListener('click', hideCredits);
+
+instructionsButton.addEventListener('click', showInstructions);
+instructionsBackButton.addEventListener('click', hideInstructions);
+
+mapsButton.addEventListener('click', showMaps);
+mapsBackButton.addEventListener('click', hideMaps);
 
 function startGame() {
     const mapSelect = document.getElementById('mapSelect');
@@ -312,15 +331,31 @@ function showCredits() {
     creditsContainer.style.display = 'flex';
 }
 
+
+
 function hideCredits() {
     creditsContainer.style.display = 'none';
     menuContainer.style.display = 'flex';
 }
 
+function showInstructions() {
+    menuContainer.style.display = 'none';
+    instructionsContainer.style.display = 'flex';
+}
+function hideInstructions() {
+    instructionsContainer.style.display = 'none';
+    menuContainer.style.display = 'flex';
+}
 
+function showMaps() {
+    menuContainer.style.display = 'none';
+    mapsContainer.style.display = 'flex';
+}
 
-
- 
+function hideMaps() {
+    mapsContainer.style.display = 'none';
+    menuContainer.style.display = 'flex';
+}
 
 
 function switchCamera() {

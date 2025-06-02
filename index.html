@@ -1,64 +1,91 @@
 <!DOCTYPE html>
 <html lang="pt-pt">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOMBOCLAT</title>
-    <link rel="stylesheet" href="style.css">
-    <script src = "main.js" type="module"></script>
-</head>
-<body>
-    <img id="background" src="backgrounds/8-bit-graphics-pixels-scene-with-forest.jpg" alt="Background Image" style="width: 100%; height: 100%; position: absolute; z-index: -1;">
-    <!-- Menu Principal -->
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>BOMBOCLAT</title>
+        <link rel="stylesheet" href="style.css">
+        <script src = "main.js" type="module"></script>
+    </head>
+    <body>
+        <img id="background" src="backgrounds/8-bit-graphics-pixels-scene-with-forest.jpg" alt="Background Image" style="width: 100%; height: 100%; position: absolute; z-index: -1;">
+        <!-- Menu Principal -->
 
 
-<div id="menuContainer">
+        <div id="menuContainer">
 
-         <div id="logoWrapper">
-        <img id="logo" src="assets/images/logo.svg" alt="Logo"/>    
-    </div>
-    <div style="height: 100px;"></div>
-    <div id="buttonGroup">
-        <button class="menuButton" id="playButton">JOGAR</button>
-        <button class="menuButton" id="optionsButton">OPÇÕES</button>
-        <button class="menuButton" id="creditsButton">CRÉDITOS</button>
-    <div class="menuButton">
-    <h3>Select Map:</h3>
-    <select id="mapSelect">
-        <option value="classic">Classic</option>
-        <option value="maze">Maze</option>
-        <option value="arena">Arena</option>
-    </select>
-</div>    </div>
-</div>
+            <div id="logoWrapper">
+                <img id="logo" src="assets/images/logo.svg" alt="Logo"/>
+            </div>
 
-<!-- Tela de Créditos -->
-<div id="creditsContainer">
-    <div id="creditsContent">
-        <h2 id="creditsTitle">CRÉDITOS</h2>
-        <div id="creditsText">
-            <p>DAVID SANTOS AL78851</p>
-            <p>DIOGO PINTO AL78734</p>
-            <p>FILIPA MONTEIRO AL78231</p>
-            <p>JOÃO ESTEVES AL78211</p>
-            <p>Este jogo foi desenvolvido no âmbito da UC Computação Gráfica.</p>
+            <div style="height: 100px;"></div>
+
+            <div id="buttonGroup">
+                <button class="menuButton" id="playButton">JOGAR</button>
+                <button class="menuButton" id="instructionsButton">INSTRUÇÕES</button>
+                <button class="menuButton" id="creditsButton">CRÉDITOS</button>
+                <button class="menuButton" id="mapsButton">MAPAS</button>
+
+            </div>
+
         </div>
-        <button id="backButton">VOLTAR</button>
-    </div>
-</div>
 
-<!-- Conteúdo do Jogo -->
-<div id="gameContainer">
-    <div id="info">
-        <img src="assets/images/wasd.svg" height="50px" style="margin-top: 15px;" alt="W-A-S-D"/>
-        <br>
-        'C' muda a câmera
-        <br>
-        ESPAÇO coloca bomba
-    </div>
-    <div id="topViewContainer"></div>
-    <div id="secondaryViewContainer" style="position: absolute; top: 20px; right: 20px; width: 200px; height: 200px; border: 2px solid white;"></div>
-</div>
+        <!-- Créditos -->
+        <div id="creditsContainer">
+            <div id="creditsContent">
+                <h2 id="creditsTitle">CRÉDITOS</h2>
+                <div id="creditsText">
+                    <p>DAVID SANTOS AL78851</p>
+                    <p>DIOGO PINTO AL78734</p>
+                    <p>FILIPA MONTEIRO AL78231</p>
+                    <p>JOÃO ESTEVES AL78211</p>
+                    <p>Este jogo foi desenvolvido no âmbito da UC Computação Gráfica.</p>
+                </div>
+                <button id="backButton">VOLTAR</button>
+            </div>
+        </div>
 
-</body>
+        <!-- Instruções -->
+        <div id="instructionsContainer">
+            <div id="instructionsContent">
+                <h2 id="instructionsTitle">Instruções</h2>
+                <div id="intructionsText">
+                    <p>blablabla</p>
+                </div>
+                <button id="instructionsBackButton">VOLTAR</button>
+            </div>
+        </div>
+
+        <!-- Mapas -->
+        <div id="mapsContainer">
+            <div id="mapsContent">
+                <h2 id="mapsTitle">Mapas</h2>
+                <div id="mapsText">
+                    <select id="mapSelect">
+                        <option value="classic">Classic</option>
+                        <option value="maze">Maze</option>
+                        <option value="arena">Arena</option>
+                    </select>
+                </div>
+                <button id="mapsPlayButton">JOGAR</button>
+                <button id="mapsBackButton">VOLTAR</button>
+            </div>
+        </div>
+
+
+
+        <!-- Jogo -->
+        <div id="gameContainer">
+            <div id="info">
+                <img src="assets/images/wasd.svg" height="50px" style="margin-top: 15px;" alt="W-A-S-D"/>
+                <br>
+                'C' muda a câmera
+                <br>
+                ESPAÇO coloca bomba
+            </div>
+            <div id="topViewContainer"></div>
+            <div id="secondaryViewContainer" style="position: absolute; top: 20px; right: 20px; width: 200px; height: 200px; border: 2px solid white;"></div>
+        </div>
+
+    </body>
 </html>
