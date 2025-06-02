@@ -1,11 +1,22 @@
+// IMPORTS NODE
 import * as THREE from 'three';
-import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
-import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
+import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
+import {MTLLoader} from 'three/addons/loaders/MTLLoader.js';
 
+// IMPORTS LOCAIS
+import { GAME_MAPS, PLAYER_TEXTURES, MAP_MODELS, WALL_TEXTURES } from './consts.js';
+
+let gameActive = false;
 
 const textureLoader = new THREE.TextureLoader();
 
-let gameActive = false;
+
+const audioLoader = new THREE.AudioLoader();
+const listener = new THREE.AudioListener();
+
+
+
+
 
 const menuContainer = document.getElementById('menuContainer');
 const creditsContainer = document.getElementById('creditsContainer');
@@ -42,7 +53,7 @@ let lightControlsVisible = false;
 
 const arenaSize = 30;
 const wallHeight = 2;
-const gridSize = 15; 
+const gridSize = 15;
 const cellSize = arenaSize / gridSize;
 
 let scene, camera, renderer;
@@ -53,12 +64,11 @@ let topViewScene, topViewCamera, topViewRenderer;
 let player, arena, topViewPlayer, topViewArena;
 let rats = [];
 let totalCoins = 0;
-let collectedCoins = 0; 
+let collectedCoins = 0;
 
 let freeCamera;
 let freeCameraActive = false;
 let freeCameraSpeed = 0.05;
-let freeCameraRotationSpeed = 0.02;
 let freeCameraControls = {
     up: false,
     down: false,
@@ -67,14 +77,10 @@ let freeCameraControls = {
     forward: false,
     backward: false
 };
-let mouseX = 0;
-let mouseY = 0;
 let targetRotationX = 0;
 let targetRotationY = 0;
 let currentRotationX = 0;
 let currentRotationY = 0;
-const rotationSmoothing = 0.1;
-const maxVerticalRotation = Math.PI / 2;
 
 let isSpeedBoosted = false;
 let speedBoostTimeout = null;
@@ -82,226 +88,29 @@ const SPEED_BOOST_DURATION = 5000; // 5 segundos
 const SPEED_BOOST_MULTIPLIER = 1.5;
 
 const RAT_MOVE_INTERVAL = 1000;
-const MOVEMENT_DURATION = 500; // Mais rápido, estilo Minecraft
 const LIMB_ROTATION = Math.PI / 4;
 let moveForward = false;
 let moveBackward = false;
 let moveLeft = false;
 let moveRight = false;
 let isTopView = false;
-let bombs = []; 
-let explosions = []; 
-const BOMB_TIMER = 2000; 
-const EXPLOSION_DURATION = 1000; 
-const EXPLOSION_RANGE = 2; 
+let bombs = [];
+let explosions = [];
+const BOMB_TIMER = 2000;
+const EXPLOSION_DURATION = 1000;
+const EXPLOSION_RANGE = 2;
 let canMove = true;
 let playerSpeed2 = 1.0;
-
-const playerSpeed = 1.0;
-
-
-const GAME_MAPS = {
-    classic: [
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 1, 2, 0, 0, 1, 1, 1, 0, 1, 1, 2, 1, 0],
-        [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
-        [0, 2, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 2, 0],
-        [0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0],
-        [0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0],
-        [0, 1, 0, 1, 1, 0, 0, 2, 0, 0, 1, 0, 0, 1, 0],
-        [0, 2, 0, 0, 1, 2, 1, 1, 1, 2, 1, 1, 0, 2, 0],
-        [0, 1, 0, 0, 1, 0, 0, 2, 0, 0, 1, 0, 0, 1, 0],
-        [0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0],
-        [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0],
-        [0, 2, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 2, 0],
-        [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
-        [0, 1, 1, 2, 0, 0, 1, 1, 1, 0, 1, 1, 2, 1, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    ],
-    maze: [
-        [0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0],
-        [0, 1, 0, 1, 0, 2, 0, 1, 0, 2, 0, 1, 0, 1, 0],
-        [0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0],
-        [0, 1, 1, 2, 0, 0, 0, 2, 0, 0, 0, 2, 1, 1, 0],
-        [0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0],
-        [1, 2, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 2, 1],
-        [0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 1, 0, 0, 0, 0],
-        [0, 1, 1, 2, 0, 0, 2, 1, 2, 0, 0, 2, 1, 1, 0],
-        [0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 1, 0, 0, 0, 0],
-        [1, 2, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 2, 1],
-        [0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0],
-        [0, 1, 1, 2, 0, 0, 0, 2, 0, 0, 0, 2, 1, 1, 0],
-        [0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0],
-        [0, 1, 0, 1, 0, 2, 0, 1, 0, 2, 0, 1, 0, 1, 0],
-        [0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0]
-    ],
-    arena: [
-        [0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1],
-        [0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 1],
-        [1, 0, 1, 0, 1, 0, 1, 2, 1, 0, 1, 0, 1, 0, 1],
-        [1, 2, 0, 2, 0, 2, 0, 0, 0, 2, 0, 2, 0, 2, 1],
-        [1, 0, 1, 0, 1, 0, 1, 2, 1, 0, 1, 0, 1, 0, 1],
-        [1, 0, 0, 2, 0, 2, 0, 0, 0, 2, 0, 2, 0, 0, 1],
-        [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
-        [0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0],
-        [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
-        [1, 0, 0, 2, 0, 2, 0, 0, 0, 2, 0, 2, 0, 0, 1],
-        [1, 0, 1, 0, 1, 0, 1, 2, 1, 0, 1, 0, 1, 0, 1],
-        [1, 2, 0, 2, 0, 2, 0, 0, 0, 2, 0, 2, 0, 2, 1],
-        [1, 0, 1, 0, 1, 0, 1, 2, 1, 0, 1, 0, 1, 0, 1],
-        [1, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 1],
-        [1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1]
-    ]
-};
 
 let currentMap = 'maze';
 let mazeLayout = GAME_MAPS[currentMap];
 
 
-const PLAYER_TEXTURES = {
-    hat: 'assets/textures/player/hat.jpg',
-    shirt: 'assets/textures/player/shirt.jpg',
-    pants: 'assets/textures/player/pant.jpg'
-};
-
-const MAP_MODELS = {
-    classic: {
-        destructible: [
-            {
-                obj: '/assets/models/flower01/Flower01-0.obj',
-                mtl: '/assets/models/flower01/Flower01-0.mtl'
-            },
-            {
-                obj: '/assets/models/deer/deer.obj',
-                mtl: '/assets/models/deer/deer.mtl'
-            }
-        ],
-        powerUps: [
-            {
-                obj: '/assets/models/CreamPie/CreamPie.obj',
-                mtl: '/assets/models/CreamPie/CreamPie.mtl'
-            }
-        ],
-        rat: {
-            obj: '/assets/models/rat/rat.obj',
-            mtl: '/assets/models/rat/rat.mtl'
-        },
-                coin: {
-            obj: '/assets/models/coin/coin.obj',
-            mtl: '/assets/models/coin/coin.mtl'
-        }
-    },
-    maze: {
-        destructible: [
-            {
-                obj: '/assets/models/flower01/Flower01-0.obj',
-                mtl: '/assets/models/flower01/Flower01-0.mtl'
-            },
-            {
-                obj: '/assets/models/deer/deer.obj',
-                mtl: '/assets/models/deer/deer.mtl'
-            }
-        ],
-        powerUps: [
-            {
-                obj: '/assets/models/CreamPie/CreamPie.obj',
-                mtl: '/assets/models/CreamPie/CreamPie.mtl'
-            }
-        ],
-        rat: {
-            obj: '/assets/models/rat/rat.obj',
-            mtl: '/assets/models/rat/rat.mtl'
-        },
-                coin: {
-            obj: '/assets/models/coin/coin.obj',
-            mtl: '/assets/models/coin/coin.mtl'
-        }
-    },
-    arena: {
-        destructible: [
-            {
-                obj: '/assets/models/bell/bell.obj',
-                mtl: '/assets/models/bell/bell.mtl'
-            },
-                        {
-                obj: '/assets/models/sacks/sacks.obj',
-                mtl: '/assets/models/sacks/sacks.mtl'
-            },
-            {
-                obj: '/assets/models/jar/jar.obj',
-                mtl: '/assets/models/jar/jar.mtl'
-            }
-        ],
-        powerUps: [
-            {
-                obj: '/assets/models/CreamPie/CreamPie.obj',
-                mtl: '/assets/models/CreamPie/CreamPie.mtl'
-            }
-        ],
-        rat: {
-            obj: '/assets/models/rat/rat.obj',
-            mtl: '/assets/models/rat/rat.mtl'
-        },
-                coin: {
-            obj: '/assets/models/coin/coin.obj',
-            mtl: '/assets/models/coin/coin.mtl'
-        }
-    }
-};
-
-
-const WALL_TEXTURES = {
-    classic: {
-        floor: [
-            'assets/textures/classic/floor1.png',
-        ],
-        sides: [
-            'assets/textures/classic/wall1.png',
-            'assets/textures/classic/wall2.png',
-            'assets/textures/classic/wall3.png',
-            'assets/textures/classic/wall4.png'
-        ],
-        top: [
-            'assets/textures/classic/top1.png',
-        ]
-    },
-    maze: {
-        floor: [
-            'assets/textures/maze/floor1.png',
-            'assets/textures/maze/floor2.png',
-        ],
-        sides: [
-            'assets/textures/maze/wall1.png',
-            'assets/textures/maze/wall2.png',
-            'assets/textures/maze/wall3.png'
-        ],
-        top: [
-            'assets/textures/maze/top1.png',
-        ]
-    },
-    arena: {
-        floor: [
-            'assets/textures/arena/floor1.png',
-
-        ],
-        sides: [
-            'assets/textures/arena/wall1.png',
-            'assets/textures/arena/wall2.png',
-            'assets/textures/arena/wall3.png',
-                        'assets/textures/arena/wall4.png',
-            'assets/textures/arena/wall5.png'
-
-        ],
-        top: [
-            'assets/textures/arena/top1.png',
-
-        ]
-    }
-};
-
-
 playButton.addEventListener('click', startGame);
-mapsPlayButton.addEventListener('click', () => {hideMaps(); startGame();});
+mapsPlayButton.addEventListener('click', () => {
+    hideMaps();
+    startGame();
+});
 
 creditsButton.addEventListener('click', showCredits);
 backButton.addEventListener('click', hideCredits);
@@ -316,7 +125,7 @@ function startGame() {
     const mapSelect = document.getElementById('mapSelect');
     currentMap = mapSelect.value;
     mazeLayout = GAME_MAPS[currentMap];
-    
+
     menuContainer.style.display = 'none';
     gameContainer.style.display = 'block';
     gameActive = true;
@@ -332,7 +141,6 @@ function showCredits() {
 }
 
 
-
 function hideCredits() {
     creditsContainer.style.display = 'none';
     menuContainer.style.display = 'flex';
@@ -342,6 +150,7 @@ function showInstructions() {
     menuContainer.style.display = 'none';
     instructionsContainer.style.display = 'flex';
 }
+
 function hideInstructions() {
     instructionsContainer.style.display = 'none';
     menuContainer.style.display = 'flex';
@@ -364,78 +173,79 @@ function switchCamera() {
         camera.position.set(0, 30, 0);
         camera.lookAt(0, 0, 0);
         camera.rotation.z = 0;
-        
+
         secondaryCamera.position.set(arenaSize, arenaSize, arenaSize);
         secondaryCamera.lookAt(0, 0, 0);
     } else {
         camera.position.set(arenaSize, arenaSize, arenaSize);
         camera.lookAt(0, 0, 0);
-        
+
         secondaryCamera.position.set(0, 30, 0);
         secondaryCamera.lookAt(0, 0, 0);
         secondaryCamera.rotation.z = 0;
     }
 }
+
 function placeBomb() {
-    const existingBomb = bombs.find(bomb => 
-        bomb.gridX === currentGridX && 
+    const existingBomb = bombs.find(bomb =>
+        bomb.gridX === currentGridX &&
         bomb.gridZ === currentGridZ
     );
-    
+
     if (existingBomb) return;
 
     if (bombSound) {
         const sound = new THREE.Audio(listener);
         sound.setBuffer(bombSound);
-        sound.setVolume(0.5); 
+        sound.setVolume(0.5);
         sound.play();
     }
 
     const worldPos = gridToWorld(currentGridX, currentGridZ);
-    
+
     const bombGroup = new THREE.Group();
     bombGroup.position.set(worldPos.x, 0, worldPos.z);
     scene.add(bombGroup);
-    
+
 
     loadOBJModel(
         '/assets/models/bomb/bomb.obj',
         '/assets/models/bomb/bomb.mtl',
-        { x: 0, y: 0, z: 0 },
+        {x: 0, y: 0, z: 0},
         bombGroup
     );
-    
+
     const bomb = {
         mesh: bombGroup,
         gridX: currentGridX,
         gridZ: currentGridZ,
         timer: Date.now(),
     };
-    
+
     bombs.push(bomb);
-    
+
     setTimeout(() => explodeBomb(bomb), BOMB_TIMER);
 }
 
 function explodeBomb(bomb) {
     scene.remove(bomb.mesh);
     bombs = bombs.filter(b => b !== bomb);
-    
+
     // Criar flash de luz
     const explosionLight = new THREE.PointLight(0xffff00, 3, 10);
     explosionLight.position.copy(bomb.mesh.position);
     explosionLight.position.y = 1; // Posicionar um pouco acima do chão
     scene.add(explosionLight);
-    
+
     // Animação do flash
     const flashDuration = 500; // duração em millisegundos
     const flashStartIntensity = 30;
     const flashStartTime = Date.now();
-    
+
     function updateFlash() {
         const elapsed = Date.now() - flashStartTime;
         const progress = elapsed / flashDuration;
-        
+
         if (progress < 1) {
             explosionLight.intensity = flashStartIntensity * (1 - progress);
             requestAnimationFrame(updateFlash);
@@ -443,25 +253,25 @@ function explodeBomb(bomb) {
             scene.remove(explosionLight);
         }
     }
-    
+
     updateFlash();
-    
+
     const explosionGeometry = new THREE.BoxGeometry(cellSize, 0.1, cellSize);
-    const explosionMaterial = new THREE.MeshPhongMaterial({ 
+    const explosionMaterial = new THREE.MeshPhongMaterial({
         color: 0xff0000,
         transparent: true,
-        opacity: 0.7 
+        opacity: 0.7
     });
-    
+
     const canPropagate = (gridX, gridZ) => {
         if (gridX < 0 || gridX >= gridSize || gridZ < 0 || gridZ >= gridSize) {
             return false;
         }
         return mazeLayout[gridZ][gridX] !== 1;
     };
-    
+
     const explosionCells = [];
-        const killedRats = new Set();
+    const killedRats = new Set();
 
 
     const addExplosion = (gridX, gridZ) => {
@@ -472,80 +282,73 @@ function explodeBomb(bomb) {
             scene.add(explosionMesh);
             explosionCells.push(explosionMesh);
 
-                        rats.forEach(rat => {
+            rats.forEach(rat => {
                 if (rat.gridX === gridX && rat.gridZ === gridZ) {
                     killedRats.add(rat);
                 }
             });
-            
-if (mazeLayout[gridZ][gridX] === 2) {
-    mazeLayout[gridZ][gridX] = 0;
-    arena.children.forEach(child => {
-        if (child.position.x === worldPos.x && 
-            child.position.z === worldPos.z && 
-            child instanceof THREE.Group) {
-            arena.remove(child);
-            
-            // deixar a 1 para teste
-if (Math.random() < 1) {
-    const mapPowerUps = MAP_MODELS[currentMap].powerUps;
-    const randomPowerUp = mapPowerUps[Math.floor(Math.random() * mapPowerUps.length)];
-    const powerUpGroup = new THREE.Group();
-    powerUpGroup.position.set(worldPos.x, wallHeight/2, worldPos.z);
-    
-    powerUpGroup.userData.isPowerUp = true;
-    
-    loadOBJModel(
-        randomPowerUp.obj,
-        randomPowerUp.mtl,
-        { x: 0, y: 0, z: 0 },
-        powerUpGroup
-    );
-    
-    const initialY = powerUpGroup.position.y;
-    powerUpGroup.userData.floatAnimation = {
-        initialY: initialY,
-        offset: 0
-    };
-    
-    arena.add(powerUpGroup);
-}
-        }
-    });
-    return false;
-}
-            return true; 
+
+            if (mazeLayout[gridZ][gridX] === 2) {
+                mazeLayout[gridZ][gridX] = 0;
+                arena.children.forEach(child => {
+                    if (child.position.x === worldPos.x &&
+                        child.position.z === worldPos.z &&
+                        child instanceof THREE.Group) {
+                        arena.remove(child);
+
+                        // deixar a 1 para teste
+                        if (Math.random() < 1) {
+                            const mapPowerUps = MAP_MODELS[currentMap].powerUps;
+                            const randomPowerUp = mapPowerUps[Math.floor(Math.random() * mapPowerUps.length)];
+                            const powerUpGroup = new THREE.Group();
+                            powerUpGroup.position.set(worldPos.x, wallHeight / 2, worldPos.z);
+
+                            powerUpGroup.userData.isPowerUp = true;
+
+                            loadOBJModel(
+                                randomPowerUp.obj,
+                                randomPowerUp.mtl,
+                                {x: 0, y: 0, z: 0},
+                                powerUpGroup
+                            );
+
+                            const initialY = powerUpGroup.position.y;
+                            powerUpGroup.userData.floatAnimation = {
+                                initialY: initialY,
+                                offset: 0
+                            };
+
+                            arena.add(powerUpGroup);
+                        }
+                    }
+                });
+                return false;
+            }
+            return true;
         }
         return false;
     };
-    
+
     addExplosion(bomb.gridX, bomb.gridZ);
-    
+
     const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 
 
-    
     directions.forEach(([dx, dz]) => {
         let canContinue = true;
         for (let i = 1; i <= EXPLOSION_RANGE && canContinue; i++) {
             const gridX = bomb.gridX + (dx * i);
             const gridZ = bomb.gridZ + (dz * i);
-            
+
             if (!canPropagate(gridX, gridZ)) {
                 break;
             }
-            
+
             canContinue = addExplosion(gridX, gridZ);
         }
-            const explosionGeometry = new THREE.BoxGeometry(cellSize, 0.1, cellSize);
-    const explosionMaterial = new THREE.MeshPhongMaterial({ 
-        color: 0xff0000,
-        transparent: true,
-        opacity: 0.7 
-    });
     });
 
-            rats = rats.filter(rat => {
+    rats = rats.filter(rat => {
         if (killedRats.has(rat)) {
             scene.remove(rat.mesh);
             return false;
@@ -553,34 +356,34 @@ if (Math.random() < 1) {
         return true;
     });
 
-const checkPlayerDamage = () => {
-    const playerGridPos = worldToGrid(player.position.x, player.position.z);
-    
-    const isPlayerHit = explosionCells.some(mesh => {
-        const explosionGridPos = worldToGrid(mesh.position.x, mesh.position.z);
-        return explosionGridPos.x === playerGridPos.x && 
-               explosionGridPos.z === playerGridPos.z;
-    });
+    const checkPlayerDamage = () => {
+        const playerGridPos = worldToGrid(player.position.x, player.position.z);
 
-    if (isPlayerHit && !isGameOver) {
-        if (damageSound) {
-            const sound = new THREE.Audio(listener);
-            sound.setBuffer(damageSound);
-            sound.setVolume(0.5); 
-            sound.play();
+        const isPlayerHit = explosionCells.some(mesh => {
+            const explosionGridPos = worldToGrid(mesh.position.x, mesh.position.z);
+            return explosionGridPos.x === playerGridPos.x &&
+                explosionGridPos.z === playerGridPos.z;
+        });
+
+        if (isPlayerHit && !isGameOver) {
+            if (damageSound) {
+                const sound = new THREE.Audio(listener);
+                sound.setBuffer(damageSound);
+                sound.setVolume(0.5);
+                sound.play();
+            }
+
+            playerLives--;
+            updateHUD();
+
+            if (playerLives <= 0) {
+                gameOver();
+            }
         }
+    };
 
-        playerLives--;
-        updateHUD();
-        
-        if (playerLives <= 0) {
-            gameOver();
-        }
-    }
-};
+    checkPlayerDamage();
 
-checkPlayerDamage();
-    
     setTimeout(() => {
         explosionCells.forEach(mesh => scene.remove(mesh));
     }, EXPLOSION_DURATION);
@@ -588,16 +391,16 @@ checkPlayerDamage();
 
 function loadOBJModel(objPath, mtlPath, position, parentGroup) {
     const materialLoader = new MTLLoader();
-    
-    materialLoader.load(mtlPath, function(materials) {
+
+    materialLoader.load(mtlPath, function (materials) {
         materials.preload();
-        
+
         const objectLoader = new OBJLoader();
         objectLoader.setMaterials(materials);
-        
+
         objectLoader.load(objPath,
             function (object) {
-                object.traverse(function(child) {
+                object.traverse(function (child) {
                     if (child instanceof THREE.Mesh) {
                         child.castShadow = true;
                         child.receiveShadow = true;
@@ -625,15 +428,15 @@ function loadOBJModel(objPath, mtlPath, position, parentGroup) {
     });
 }
 
-let currentGridX = 0;  
-let currentGridZ = 0; 
-let targetGridX = 0;   
-let targetGridZ = 0;   
+let currentGridX = 0;
+let currentGridZ = 0;
+let targetGridX = 0;
+let targetGridZ = 0;
 
 function gridToWorld(gridX, gridZ) {
     return {
-        x: (gridX - gridSize/2 + 0.5) * cellSize,
-        z: (gridZ - gridSize/2 + 0.5) * cellSize
+        x: (gridX - gridSize / 2 + 0.5) * cellSize,
+        z: (gridZ - gridSize / 2 + 0.5) * cellSize
     };
 }
 
@@ -644,8 +447,8 @@ function checkRatCollision(rat) {
 
 function worldToGrid(worldX, worldZ) {
     return {
-        x: Math.floor((worldX + arenaSize/2) / cellSize),
-        z: Math.floor((worldZ + arenaSize/2) / cellSize)
+        x: Math.floor((worldX + arenaSize / 2) / cellSize),
+        z: Math.floor((worldZ + arenaSize / 2) / cellSize)
     };
 }
 
@@ -681,7 +484,7 @@ function init() {
     camera.lookAt(0, 0, 0);
 
     // Enhanced renderer setup
-    renderer = new THREE.WebGLRenderer({ 
+    renderer = new THREE.WebGLRenderer({
         antialias: true,
         logarithmicDepthBuffer: true
     });
@@ -702,7 +505,7 @@ function init() {
     const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
     sunLight.position.set(20, 30, 20);
     sunLight.castShadow = true;
-    
+
     // Enhanced shadow settings
     sunLight.shadow.mapSize.width = 2048;
     sunLight.shadow.mapSize.height = 2048;
@@ -728,11 +531,11 @@ function init() {
 
     // Point lights for atmosphere
     const pointLight1 = new THREE.PointLight(0xffcc77, 5, 30);
-    pointLight1.position.set(arenaSize/3, 5, arenaSize/3);
+    pointLight1.position.set(arenaSize / 3, 5, arenaSize / 3);
     scene.add(pointLight1);
 
     const pointLight2 = new THREE.PointLight(0x77ccff, 5, 30);
-    pointLight2.position.set(-arenaSize/3, 5, -arenaSize/3);
+    pointLight2.position.set(-arenaSize / 3, 5, -arenaSize / 3);
     scene.add(pointLight2);
 
     // Top view setup
@@ -749,8 +552,8 @@ function init() {
     topViewCamera.position.set(0, 30, 0);
     topViewCamera.lookAt(0, 0, 0);
     topViewCamera.rotation.z = 0;
-    
-    topViewRenderer = new THREE.WebGLRenderer({ antialias: true });
+
+    topViewRenderer = new THREE.WebGLRenderer({antialias: true});
     topViewRenderer.setSize(200, 200);
     topViewRenderer.shadowMap.enabled = true;
     document.getElementById('topViewContainer').appendChild(topViewRenderer.domElement);
@@ -769,8 +572,8 @@ function init() {
     secondaryCamera.position.set(0, 30, 0);
     secondaryCamera.lookAt(0, 0, 0);
     secondaryCamera.rotation.z = 0;
-    
-    secondaryRenderer = new THREE.WebGLRenderer({ antialias: true });
+
+    secondaryRenderer = new THREE.WebGLRenderer({antialias: true});
     secondaryRenderer.setSize(200, 200);
     secondaryRenderer.shadowMap.enabled = true;
     document.getElementById('secondaryViewContainer').appendChild(secondaryRenderer.domElement);
@@ -790,9 +593,9 @@ function init() {
     createPlayer();
     createTopViewPlayer();
     initializeRats();
-        createLightControlPanel();
+    createLightControlPanel();
 
-        createClock();
+    createClock();
     gameStartTime = Date.now() - (cycleDuration / 3);
 
     // Event listeners
@@ -808,13 +611,13 @@ function createFreeCamera() {
     freeCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     freeCamera.position.set(0, 10, 20);
     freeCamera.lookAt(0, 0, 0);
-    
+
     // Reset das rotações iniciais
     targetRotationX = 0;
     targetRotationY = 0;
     currentRotationX = 0;
     currentRotationY = 0;
-    
+
     initializeFreeCameraControls();
 }
 
@@ -824,30 +627,26 @@ function initializeFreeCameraControls() {
 }
 
 function onPointerLockChange() {
-    if (document.pointerLockElement === document.body) {
-        freeCameraActive = true;
-    } else {
-        freeCameraActive = false;
-    }
+    freeCameraActive = document.pointerLockElement === document.body;
 }
 
 function onMouseMove(event) {
     if (!freeCameraActive || !freeCamera) return;
-    
+
     // Ajustar sensibilidade do mouse
     const sensitivity = 0.002;
-    
+
     // Usar movementX e movementY para rotação mais suave
     const deltaX = event.movementX || 0;
     const deltaY = event.movementY || 0;
-    
+
     // Atualizar rotações alvo
     targetRotationY -= deltaX * sensitivity;
     targetRotationX -= deltaY * sensitivity;
-    
+
     // Limitar rotação vertical
-    targetRotationX = Math.max(-Math.PI/2, Math.min(Math.PI/2, targetRotationX));
-    
+    targetRotationX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, targetRotationX));
+
     // Aplicar rotações diretamente
     freeCamera.rotation.order = 'YXZ'; // Importante para evitar gimbal lock
     freeCamera.rotation.x = targetRotationX;
@@ -856,11 +655,11 @@ function onMouseMove(event) {
 
 function updateCameraRotation() {
     if (!freeCameraActive || !freeCamera) return;
-    
+
     // Suavizar a rotação (opcional, pode remover se quiser movimento mais direto)
     currentRotationX = THREE.MathUtils.lerp(currentRotationX, targetRotationX, 0.1);
     currentRotationY = THREE.MathUtils.lerp(currentRotationY, targetRotationY, 0.1);
-    
+
     // Aplicar rotações
     freeCamera.rotation.x = currentRotationX;
     freeCamera.rotation.y = currentRotationY;
@@ -874,7 +673,7 @@ function createArena() {
     const floorTexture = textureLoader.load(floorTexturePath);
     floorTexture.wrapS = THREE.RepeatWrapping;
     floorTexture.wrapT = THREE.RepeatWrapping;
-    floorTexture.repeat.set(gridSize, gridSize); 
+    floorTexture.repeat.set(gridSize, gridSize);
 
     const floorGeometry = new THREE.PlaneGeometry(arenaSize, arenaSize);
     const floorMaterial = new THREE.MeshLambertMaterial({
@@ -889,30 +688,28 @@ function createArena() {
 
     createGrid();
 
-    const wallMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
 
     const wallNorth = createWall(arenaSize, wallHeight, 0.5);
-    wallNorth.position.set(0, wallHeight/2, -arenaSize/2);
+    wallNorth.position.set(0, wallHeight / 2, -arenaSize / 2);
     arena.add(wallNorth);
 
     const wallSouth = createWall(arenaSize, wallHeight, 0.5);
-    wallSouth.position.set(0, wallHeight/2, arenaSize/2);
+    wallSouth.position.set(0, wallHeight / 2, arenaSize / 2);
     arena.add(wallSouth);
 
     const wallEast = createWall(0.5, wallHeight, arenaSize);
-    wallEast.position.set(arenaSize/2, wallHeight/2, 0);
+    wallEast.position.set(arenaSize / 2, wallHeight / 2, 0);
     arena.add(wallEast);
 
     const wallWest = createWall(0.5, wallHeight, arenaSize);
-    wallWest.position.set(-arenaSize/2, wallHeight/2, 0);
+    wallWest.position.set(-arenaSize / 2, wallHeight / 2, 0);
     arena.add(wallWest);
 
     createMazeBlocks();
 
     scene.add(arena);
 }
-const audioLoader = new THREE.AudioLoader();
-const listener = new THREE.AudioListener();
+
 let bombSound;
 let damageSound;
 
@@ -923,23 +720,22 @@ function getRandomTexture(textureArray) {
     return textureArray[Math.floor(Math.random() * textureArray.length)];
 }
 
-
-audioLoader.load('assets/sounds/collect.wav', function(buffer) {
+audioLoader.load('assets/sounds/collect.wav', function (buffer) {
     collectSound = buffer;
 });
 
 
-audioLoader.load('assets/sounds/bomba.wav', function(buffer) {
+audioLoader.load('assets/sounds/bomba.wav', function (buffer) {
     bombSound = buffer;
 });
-audioLoader.load('assets/sounds/damage.wav', function(buffer) {
+audioLoader.load('assets/sounds/damage.wav', function (buffer) {
     damageSound = buffer;
 });
 
 
 function gameOver() {
     isGameOver = true;
-    
+
     const gameOverDiv = document.createElement('div');
     gameOverDiv.style.position = 'absolute';
     gameOverDiv.style.top = '50%';
@@ -954,9 +750,9 @@ function gameOver() {
         <h2>Game Over!</h2>
         <button id="restartButton" style="padding: 10px; margin-top: 10px;">Restart</button>
     `;
-    
+
     gameContainer.appendChild(gameOverDiv);
-    
+
     document.getElementById('restartButton').addEventListener('click', () => {
         gameContainer.removeChild(gameOverDiv);
         restartGame();
@@ -964,7 +760,7 @@ function gameOver() {
 }
 
 function restartGame() {
-    
+
     // Stop the animation loop
     gameActive = false;
 
@@ -983,13 +779,13 @@ function restartGame() {
     document.removeEventListener('keyup', onKeyUp);
     window.removeEventListener('resize', onWindowResize);
 
-        gameStartTime = Date.now() - (cycleDuration / 3); // Reset game time
+    gameStartTime = Date.now() - (cycleDuration / 3); // Reset game time
     if (clockElement) {
         gameContainer.removeChild(clockElement);
     }
-    
+
     // Clear all game objects
-    while(scene.children.length > 0) { 
+    while (scene.children.length > 0) {
         const object = scene.children[0];
         if (object.geometry) object.geometry.dispose();
         if (object.material) {
@@ -1001,15 +797,15 @@ function restartGame() {
         }
         scene.remove(object);
     }
-    
+
     // Clear secondary and top view scenes
-    while(secondaryScene.children.length > 0) {
+    while (secondaryScene.children.length > 0) {
         secondaryScene.remove(secondaryScene.children[0]);
     }
-    while(topViewScene.children.length > 0) {
+    while (topViewScene.children.length > 0) {
         topViewScene.remove(topViewScene.children[0]);
     }
-    
+
     // Reset all game states
     bombs = [];
     explosions = [];
@@ -1027,30 +823,30 @@ function restartGame() {
     moveBackward = false;
     moveLeft = false;
     moveRight = false;
-    
+
     // Clear timeouts
     if (speedBoostTimeout) {
         clearTimeout(speedBoostTimeout);
         speedBoostTimeout = null;
     }
-    
+
     // Clear scene references
     player = null;
     arena = null;
     topViewPlayer = null;
     topViewArena = null;
-    
+
     // Reset player lives if starting fresh game
     if (isGameOver) {
         playerLives = 3;
         isGameOver = false;
     }
-    
+
     // Create fresh scenes
     scene = new THREE.Scene();
     secondaryScene = new THREE.Scene();
     topViewScene = new THREE.Scene();
-    
+
     // Reinitialize game
     gameActive = true;
     init();
@@ -1058,21 +854,21 @@ function restartGame() {
 }
 
 function createGrid() {
-    const gridMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 0.3, transparent: true });
+    const gridMaterial = new THREE.LineBasicMaterial({color: 0xffffff, opacity: 0.3, transparent: true});
 
     for (let i = 0; i <= gridSize; i++) {
         const pos = (i / gridSize) * arenaSize - arenaSize / 2;
 
         const hGeometry = new THREE.BufferGeometry().setFromPoints([
-            new THREE.Vector3(-arenaSize/2, 0.01, pos),
-            new THREE.Vector3(arenaSize/2, 0.01, pos)
+            new THREE.Vector3(-arenaSize / 2, 0.01, pos),
+            new THREE.Vector3(arenaSize / 2, 0.01, pos)
         ]);
         const hLine = new THREE.Line(hGeometry, gridMaterial);
         arena.add(hLine);
 
         const vGeometry = new THREE.BufferGeometry().setFromPoints([
-            new THREE.Vector3(pos, 0.01, -arenaSize/2),
-            new THREE.Vector3(pos, 0.01, arenaSize/2)
+            new THREE.Vector3(pos, 0.01, -arenaSize / 2),
+            new THREE.Vector3(pos, 0.01, arenaSize / 2)
         ]);
         const vLine = new THREE.Line(vGeometry, gridMaterial);
         arena.add(vLine);
@@ -1086,53 +882,52 @@ function createMazeBlocks() {
                 // Select random textures for this specific block
                 const sidesTexture = textureLoader.load(getRandomTexture(WALL_TEXTURES[currentMap].sides));
                 const topTexture = textureLoader.load(getRandomTexture(WALL_TEXTURES[currentMap].top));
-                
+
                 // Configure texture wrapping
                 sidesTexture.wrapS = sidesTexture.wrapT = THREE.RepeatWrapping;
                 topTexture.wrapS = topTexture.wrapT = THREE.RepeatWrapping;
-                
+
                 // Create materials with the selected textures
                 const wallMaterials = [
-                    new THREE.MeshLambertMaterial({ map: sidesTexture }), // right
-                    new THREE.MeshLambertMaterial({ map: sidesTexture }), // left
-                    new THREE.MeshLambertMaterial({ map: topTexture }),   // top
-                    new THREE.MeshLambertMaterial({ map: sidesTexture }), // bottom
-                    new THREE.MeshLambertMaterial({ map: sidesTexture }), // front
-                    new THREE.MeshLambertMaterial({ map: sidesTexture })  // back
+                    new THREE.MeshLambertMaterial({map: sidesTexture}), // right
+                    new THREE.MeshLambertMaterial({map: sidesTexture}), // left
+                    new THREE.MeshLambertMaterial({map: topTexture}),   // top
+                    new THREE.MeshLambertMaterial({map: sidesTexture}), // bottom
+                    new THREE.MeshLambertMaterial({map: sidesTexture}), // front
+                    new THREE.MeshLambertMaterial({map: sidesTexture})  // back
                 ];
-                
+
                 // Create block with these textures
                 const blockGeometry = new THREE.BoxGeometry(cellSize, wallHeight, cellSize);
                 const block = new THREE.Mesh(blockGeometry, wallMaterials);
                 const worldPos = gridToWorld(x, z);
-                block.position.set(worldPos.x, wallHeight/2, worldPos.z);
+                block.position.set(worldPos.x, wallHeight / 2, worldPos.z);
                 block.castShadow = true;
                 block.receiveShadow = true;
 
                 // Adjust UV coordinates for proper texture scaling
                 const uvAttribute = block.geometry.attributes.uv;
                 for (let i = 0; i < uvAttribute.count; i++) {
-                    uvAttribute.setXY(i, 
-                        uvAttribute.getX(i) * 1,
-                        uvAttribute.getY(i) * (wallHeight/cellSize)
+                    uvAttribute.setXY(i,
+                        uvAttribute.getX(i),
+                        uvAttribute.getY(i) * (wallHeight / cellSize)
                     );
                 }
 
                 arena.add(block);
-            }
-            else if (mazeLayout[z][x] === 2) {
+            } else if (mazeLayout[z][x] === 2) {
                 const worldPos = gridToWorld(x, z);
                 const mapModels = MAP_MODELS[currentMap].destructible;
                 const randomModel = mapModels[Math.floor(Math.random() * mapModels.length)];
-                
+
                 const modelGroup = new THREE.Group();
-                modelGroup.position.set(worldPos.x, wallHeight/2, worldPos.z);
+                modelGroup.position.set(worldPos.x, wallHeight / 2, worldPos.z);
                 arena.add(modelGroup);
-                
+
                 loadOBJModel(
                     randomModel.obj,
                     randomModel.mtl,
-                    { x: 0, y: 0, z: 0 },
+                    {x: 0, y: 0, z: 0},
                     modelGroup
                 );
             }
@@ -1155,19 +950,19 @@ function createTopViewArena() {
     createTopViewGrid();
 
     const wallNorth = createTopViewWall(arenaSize, 0.5, 0.5, 0xff0000);
-    wallNorth.position.set(0, 0.25, -arenaSize/2);
+    wallNorth.position.set(0, 0.25, -arenaSize / 2);
     topViewArena.add(wallNorth);
 
     const wallSouth = createTopViewWall(arenaSize, 0.5, 0.5, 0x0000ff);
-    wallSouth.position.set(0, 0.25, arenaSize/2);
+    wallSouth.position.set(0, 0.25, arenaSize / 2);
     topViewArena.add(wallSouth);
 
     const wallEast = createTopViewWall(0.5, 0.5, arenaSize, 0xffff00);
-    wallEast.position.set(arenaSize/2, 0.25, 0);
+    wallEast.position.set(arenaSize / 2, 0.25, 0);
     topViewArena.add(wallEast);
 
     const wallWest = createTopViewWall(0.5, 0.5, arenaSize, 0x00ff00);
-    wallWest.position.set(-arenaSize/2, 0.25, 0);
+    wallWest.position.set(-arenaSize / 2, 0.25, 0);
     topViewArena.add(wallWest);
 
     createTopViewMazeBlocks();
@@ -1180,12 +975,12 @@ function createRat(gridX, gridZ) {
     const worldPos = gridToWorld(gridX, gridZ);
     const ratGroup = new THREE.Group();
     ratGroup.position.set(worldPos.x, 0, worldPos.z);
-    
+
     const ratModel = MAP_MODELS[currentMap].rat;
     loadOBJModel(
         ratModel.obj,
         ratModel.mtl,
-        { x: 0, y: 0, z: 0 },
+        {x: 0, y: 0, z: 0},
         ratGroup
     );
 
@@ -1204,12 +999,13 @@ function createRat(gridX, gridZ) {
         lastDamageTime: 0
     };
 }
+
 function initializeRats() {
     // Clear any existing rats
     rats = [];
-    
+
     const validPositions = [];
-    
+
     // Find all empty cells
     for (let z = 0; z < gridSize; z++) {
         for (let x = 0; x < gridSize; x++) {
@@ -1219,32 +1015,32 @@ function initializeRats() {
             }
         }
     }
-    
+
     // Filter positions that are too close to player starting position
     const playerStartPos = {x: currentGridX, z: currentGridZ};
     const safeDistance = 4; // Minimum cells away from player
     const safePositions = validPositions.filter(pos => {
         const distance = Math.sqrt(
-            Math.pow(pos.x - playerStartPos.x, 2) + 
+            Math.pow(pos.x - playerStartPos.x, 2) +
             Math.pow(pos.z - playerStartPos.z, 2)
         );
         return distance >= safeDistance;
     });
-    
+
     // Choose positions for rats (either safe or all valid if not enough safe ones)
     const positionsToUse = safePositions.length >= 4 ? safePositions : validPositions;
-    
+
     // Create exactly 4 rats
     for (let i = 0; i < 4; i++) {
         if (positionsToUse.length === 0) break; // Safety check
-        
+
         // Select random position from available positions
         const randomIndex = Math.floor(Math.random() * positionsToUse.length);
         const position = positionsToUse[randomIndex];
-        
+
         // Remove selected position so we don't use it again
         positionsToUse.splice(randomIndex, 1);
-        
+
         // Create rat at chosen position
         const rat = createRat(position.x, position.z);
         rats.push(rat);
@@ -1262,38 +1058,38 @@ function hasLineOfSight(ratGridX, ratGridZ, playerGridX, playerGridZ) {
     // Verifica a direção
     const dx = Math.sign(playerGridX - ratGridX);
     const dz = Math.sign(playerGridZ - ratGridZ);
-    
+
     // Verifica cada célula entre o rato e o jogador
     let x = ratGridX;
     let z = ratGridZ;
-    
+
     while (x !== playerGridX || z !== playerGridZ) {
         x += dx;
         z += dz;
-        
+
         // Se encontrar uma parede no caminho, não há linha de visão
         if (mazeLayout[z][x] === 1 || mazeLayout[z][x] === 2) {
             return false;
         }
     }
-    
+
     return true;
 }
 
 function moveRats() {
     const playerGridPos = worldToGrid(player.position.x, player.position.z);
-    
+
     rats.forEach(rat => {
         if (!rat.isMoving) {
             if (hasLineOfSight(rat.gridX, rat.gridZ, playerGridPos.x, playerGridPos.z)) {
                 // Atualiza última posição conhecida e marca como perseguindo
-                rat.lastKnownPlayerPos = { x: playerGridPos.x, z: playerGridPos.z };
+                rat.lastKnownPlayerPos = {x: playerGridPos.x, z: playerGridPos.z};
                 rat.isChasing = true;
-                
+
                 // Modo perseguição
                 const dx = Math.sign(playerGridPos.x - rat.gridX);
                 const dz = Math.sign(playerGridPos.z - rat.gridZ);
-                
+
                 if (dx !== 0 && canMoveToCell(rat.gridX + dx, rat.gridZ)) {
                     rat.targetGridX = rat.gridX + dx;
                     rat.targetGridZ = rat.gridZ;
@@ -1307,9 +1103,9 @@ function moveRats() {
                 // Move em direção à última posição conhecida
                 const dx = Math.sign(rat.lastKnownPlayerPos.x - rat.gridX);
                 const dz = Math.sign(rat.lastKnownPlayerPos.z - rat.gridZ);
-                
+
                 let moved = false;
-                
+
                 if (dx !== 0 && canMoveToCell(rat.gridX + dx, rat.gridZ)) {
                     rat.targetGridX = rat.gridX + dx;
                     rat.targetGridZ = rat.gridZ;
@@ -1319,11 +1115,11 @@ function moveRats() {
                     rat.targetGridZ = rat.gridZ + dz;
                     moved = true;
                 }
-                
+
                 if (moved) {
                     rat.isMoving = true;
-                } else if (rat.gridX === rat.lastKnownPlayerPos.x && 
-                          rat.gridZ === rat.lastKnownPlayerPos.z) {
+                } else if (rat.gridX === rat.lastKnownPlayerPos.x &&
+                    rat.gridZ === rat.lastKnownPlayerPos.z) {
                     // Chegou à última posição conhecida, volta ao movimento aleatório
                     rat.lastKnownPlayerPos = null;
                     rat.isChasing = false;
@@ -1331,10 +1127,10 @@ function moveRats() {
             } else {
                 // Movimento aleatório normal
                 const directions = [
-                    { dx: 1, dz: 0, rotation: -Math.PI/2 },
-                    { dx: -1, dz: 0, rotation: Math.PI/2 },
-                    { dx: 0, dz: 1, rotation: Math.PI },
-                    { dx: 0, dz: -1, rotation: 0 }
+                    {dx: 1, dz: 0, rotation: -Math.PI / 2},
+                    {dx: -1, dz: 0, rotation: Math.PI / 2},
+                    {dx: 0, dz: 1, rotation: Math.PI},
+                    {dx: 0, dz: -1, rotation: 0}
                 ];
 
                 const validDirections = directions.filter(dir => {
@@ -1359,7 +1155,7 @@ function moveRats() {
 // Modifique a constante RAT_MOVE_INTERVAL para um valor menor
 
 function updateRats() {
-        const currentTime = Date.now();
+    const currentTime = Date.now();
     const DAMAGE_COOLDOWN = 3000; // 
     rats.forEach(rat => {
         // Verifica colisão com o jogador
@@ -1372,17 +1168,17 @@ function updateRats() {
                     sound.setVolume(0.5);
                     sound.play();
                 }
-                
+
                 playerLives--;
                 updateHUD();
-                
+
                 // Atualiza o tempo do último dano
                 rat.lastDamageTime = currentTime;
-                
+
                 if (playerLives <= 0) {
                     gameOver();
                 }
-                 }
+            }
         }
 
         if (rat.isMoving) {
@@ -1403,29 +1199,28 @@ function updateRats() {
                 rat.mesh.position.x += (dx / distance) * moveSpeed;
                 rat.mesh.position.z += (dz / distance) * moveSpeed;
 
-                const targetAngle = Math.atan2(dx, dz);
-                rat.mesh.rotation.y = targetAngle;
+                rat.mesh.rotation.y = Math.atan2(dx, dz);
             }
         }
     });
 }
 
 function createTopViewGrid() {
-    const gridMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 0.5, transparent: true });
+    const gridMaterial = new THREE.LineBasicMaterial({color: 0xffffff, opacity: 0.5, transparent: true});
 
     for (let i = 0; i <= gridSize; i++) {
         const pos = (i / gridSize) * arenaSize - arenaSize / 2;
 
         const hGeometry = new THREE.BufferGeometry().setFromPoints([
-            new THREE.Vector3(-arenaSize/2, 0.01, pos),
-            new THREE.Vector3(arenaSize/2, 0.01, pos)
+            new THREE.Vector3(-arenaSize / 2, 0.01, pos),
+            new THREE.Vector3(arenaSize / 2, 0.01, pos)
         ]);
         const hLine = new THREE.Line(hGeometry, gridMaterial);
         topViewArena.add(hLine);
 
         const vGeometry = new THREE.BufferGeometry().setFromPoints([
-            new THREE.Vector3(pos, 0.01, -arenaSize/2),
-            new THREE.Vector3(pos, 0.01, arenaSize/2)
+            new THREE.Vector3(pos, 0.01, -arenaSize / 2),
+            new THREE.Vector3(pos, 0.01, arenaSize / 2)
         ]);
         const vLine = new THREE.Line(vGeometry, gridMaterial);
         topViewArena.add(vLine);
@@ -1434,7 +1229,7 @@ function createTopViewGrid() {
 
 function createTopViewMazeBlocks() {
     const blockGeometry = new THREE.BoxGeometry(cellSize * 0.9, 0.5, cellSize * 0.9);
-    const blockMaterial = new THREE.MeshBasicMaterial({ color: 0x333333 });
+    const blockMaterial = new THREE.MeshBasicMaterial({color: 0x333333});
 
     for (let z = 0; z < gridSize; z++) {
         for (let x = 0; x < gridSize; x++) {
@@ -1457,16 +1252,16 @@ function createWall(width, height, depth) {
     topTexture.wrapS = topTexture.wrapT = THREE.RepeatWrapping;
 
     // Adjust texture repetition based on wall dimensions
-    sidesTexture.repeat.set(width/cellSize, height/cellSize);
-    topTexture.repeat.set(width/cellSize, depth/cellSize);
+    sidesTexture.repeat.set(width / cellSize, height / cellSize);
+    topTexture.repeat.set(width / cellSize, depth / cellSize);
 
     const wallMaterials = [
-        new THREE.MeshLambertMaterial({ map: sidesTexture }), // right
-        new THREE.MeshLambertMaterial({ map: sidesTexture }), // left
-        new THREE.MeshLambertMaterial({ map: topTexture }),   // top
-        new THREE.MeshLambertMaterial({ map: sidesTexture }), // bottom
-        new THREE.MeshLambertMaterial({ map: sidesTexture }), // front
-        new THREE.MeshLambertMaterial({ map: sidesTexture })  // back
+        new THREE.MeshLambertMaterial({map: sidesTexture}), // right
+        new THREE.MeshLambertMaterial({map: sidesTexture}), // left
+        new THREE.MeshLambertMaterial({map: topTexture}),   // top
+        new THREE.MeshLambertMaterial({map: sidesTexture}), // bottom
+        new THREE.MeshLambertMaterial({map: sidesTexture}), // front
+        new THREE.MeshLambertMaterial({map: sidesTexture})  // back
     ];
 
     const geometry = new THREE.BoxGeometry(width, height, depth);
@@ -1478,7 +1273,7 @@ function createWall(width, height, depth) {
 
 function createTopViewWall(width, height, depth, color) {
     const geometry = new THREE.BoxGeometry(width, height, depth);
-    const material = new THREE.MeshBasicMaterial({ color: color });
+    const material = new THREE.MeshBasicMaterial({color: color});
     return new THREE.Mesh(geometry, material);
 }
 
@@ -1498,7 +1293,7 @@ function createPlayer() {
 
     // Corpo com textura de camisa
     const bodyGeometry = new THREE.BoxGeometry(0.8, 1.0, 0.4);
-    const bodyMaterial = new THREE.MeshLambertMaterial({ 
+    const bodyMaterial = new THREE.MeshLambertMaterial({
         map: shirtTexture,
         side: THREE.DoubleSide
     });
@@ -1508,59 +1303,59 @@ function createPlayer() {
 
     // Cabeça permanece com a cor da pele
     const headGeometry = new THREE.SphereGeometry(0.4, 16, 16);
-    const headMaterial = new THREE.MeshLambertMaterial({ color: 0xffcc99 });
+    const headMaterial = new THREE.MeshLambertMaterial({color: 0xffcc99});
     const head = new THREE.Mesh(headGeometry, headMaterial);
     head.position.y = 1.5;
     head.castShadow = true;
 
     // Chapéu com textura própria
     const hatGroup = new THREE.Group();
-    const hatMaterial = new THREE.MeshLambertMaterial({ 
+    const hatMaterial = new THREE.MeshLambertMaterial({
         map: hatTexture,
         side: THREE.DoubleSide
     });
-    
+
     // Aba do chapéu
     const brimGeometry = new THREE.CylinderGeometry(0.6, 0.6, 0.05, 32);
     const brim = new THREE.Mesh(brimGeometry, hatMaterial);
     brim.position.y = 1.9;
-    
+
     // Copa do chapéu
     const crownGeometry = new THREE.CylinderGeometry(0.3, 0.35, 0.3, 32);
     const crown = new THREE.Mesh(crownGeometry, hatMaterial);
     crown.position.y = 2.05;
-    
+
     hatGroup.add(brim);
     hatGroup.add(crown);
 
     // Braços com textura de camisa
     const armGeometry = new THREE.BoxGeometry(0.2, 0.6, 0.2);
-    const armMaterial = new THREE.MeshLambertMaterial({ 
+    const armMaterial = new THREE.MeshLambertMaterial({
         map: shirtTexture,
         side: THREE.DoubleSide
     });
-    
+
     const leftArm = new THREE.Mesh(armGeometry, armMaterial);
     leftArm.position.set(-0.5, 0.9, 0);
     leftArm.castShadow = true;
-    
+
     const rightArm = new THREE.Mesh(armGeometry, armMaterial);
     rightArm.position.set(0.5, 0.9, 0);
     rightArm.castShadow = true;
 
     // Pernas com textura de calça
     const legGeometry = new THREE.BoxGeometry(0.25, 0.7, 0.25);
-    const legMaterial = new THREE.MeshLambertMaterial({ 
+    const legMaterial = new THREE.MeshLambertMaterial({
         map: pantsTexture,
         side: THREE.DoubleSide
     });
-    
+
     const leftLegGroup = new THREE.Group();
     const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
     leftLeg.position.y = -0.35;
     leftLegGroup.position.set(-0.3, 0.3, 0);
     leftLegGroup.add(leftLeg);
-    
+
     const rightLegGroup = new THREE.Group();
     const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
     rightLeg.position.y = -0.35;
@@ -1570,8 +1365,8 @@ function createPlayer() {
     // Adiciona olhos e boca
     // Eyes
     const eyeGeometry = new THREE.SphereGeometry(0.08, 8, 8);
-    const eyeMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
-    const eyeballMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
+    const eyeMaterial = new THREE.MeshLambertMaterial({color: 0xffffff});
+    const eyeballMaterial = new THREE.MeshLambertMaterial({color: 0x000000});
 
     const leftEye = new THREE.Group();
     const leftEyeWhite = new THREE.Mesh(eyeGeometry, eyeMaterial);
@@ -1580,7 +1375,7 @@ function createPlayer() {
     leftEye.add(leftEyeWhite);
     leftEye.add(leftEyeball);
     leftEye.position.set(-0.15, 1.6, -0.35);
-    
+
     const rightEye = new THREE.Group();
     const rightEyeWhite = new THREE.Mesh(eyeGeometry, eyeMaterial);
     const rightEyeball = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), eyeballMaterial);
@@ -1591,7 +1386,7 @@ function createPlayer() {
 
     // Mouth
     const mouthGeometry = new THREE.TorusGeometry(0.1, 0.02, 8, 12, Math.PI);
-    const mouthMaterial = new THREE.MeshLambertMaterial({ color: 0x333333 });
+    const mouthMaterial = new THREE.MeshLambertMaterial({color: 0x333333});
     const mouth = new THREE.Mesh(mouthGeometry, mouthMaterial);
     mouth.position.set(0, 1.35, -0.38);
     mouth.rotation.z = Math.PI;
@@ -1628,8 +1423,8 @@ function createPlayer() {
 function animatePlayerLimbs(walkCycle) {
     if (!player || !player.userData) return;
 
-    const { leftArm, rightArm, leftLegGroup, rightLegGroup } = player.userData;
-    
+    const {leftArm, rightArm, leftLegGroup, rightLegGroup} = player.userData;
+
     if (!canMove) {
         // Animação suave dos membros
         const armSwing = Math.sin(walkCycle) * LIMB_ROTATION;
@@ -1653,7 +1448,7 @@ function animatePlayerLimbs(walkCycle) {
 
 function createTopViewPlayer() {
     const geometry = new THREE.BoxGeometry(cellSize * 0.7, 0.2, cellSize * 0.7);
-    const material = new THREE.MeshBasicMaterial({ color: 0xff0000 }); 
+    const material = new THREE.MeshBasicMaterial({color: 0xff0000});
 
     topViewPlayer = new THREE.Mesh(geometry, material);
 
@@ -1666,7 +1461,7 @@ function createTopViewPlayer() {
 function onKeyDown(event) {
     if (!canMove || !gameActive || isGameOver) return;
 
-   if (event.code === 'KeyV') {
+    if (event.code === 'KeyV') {
         if (!freeCameraActive) {
             if (!freeCamera) {
                 createFreeCamera();
@@ -1703,21 +1498,21 @@ function onKeyDown(event) {
     }
 
     let willMove = false;
-    
+
     switch (event.code) {
-                case 'KeyL':
+        case 'KeyL':
             // Toggle light controls panel
             lightControlsVisible = !lightControlsVisible;
             lightControls.style.display = lightControlsVisible ? 'block' : 'none';
             break;
-        case 'KeyC': 
+        case 'KeyC':
             switchCamera();
             break;
 
-        case 'Space': 
+        case 'Space':
             placeBomb();
             break;
-    
+
         case 'KeyW':
             if (canMoveToCell(currentGridX, currentGridZ - 1)) {
                 moveForward = true;
@@ -1769,7 +1564,7 @@ function canMoveToCell(gridX, gridZ) {
 
 function onKeyUp(event) {
 
-        if (freeCameraActive) {
+    if (freeCameraActive) {
         switch (event.code) {
             case 'ArrowUp':
                 freeCameraControls.forward = false;
@@ -1841,32 +1636,21 @@ function onWindowResize() {
     if (!gameActive) return;
 
     const aspect = window.innerWidth / window.innerHeight;
-    
+
     // Atualizar câmera ortográfica existente
     camera.left = -arenaSize * aspect / 2;
     camera.right = arenaSize * aspect / 2;
     camera.top = arenaSize / 2;
     camera.bottom = -arenaSize / 2;
     camera.updateProjectionMatrix();
-    
+
     // Atualizar câmera livre
     if (freeCamera) {
         freeCamera.aspect = aspect;
         freeCamera.updateProjectionMatrix();
     }
-    
+
     renderer.setSize(window.innerWidth, window.innerHeight);
-}
-
-function checkWallCollisions() {
-    const playerSize = 0.4;
-
-    const limit = arenaSize / 2 - playerSize;
-
-    if (player.position.x > limit) player.position.x = limit;
-    if (player.position.x < -limit) player.position.x = -limit;
-    if (player.position.z > limit) player.position.z = limit;
-    if (player.position.z < -limit) player.position.z = -limit;
 }
 
 
@@ -1875,9 +1659,9 @@ function updatePowerUps() {
         if (child.userData.isPowerUp) {
             // Animação flutuante
             child.userData.floatAnimation.offset += 0.05;
-            child.position.y = child.userData.floatAnimation.initialY + 
-                             Math.sin(child.userData.floatAnimation.offset) * 0.2;
-            
+            child.position.y = child.userData.floatAnimation.initialY +
+                Math.sin(child.userData.floatAnimation.offset) * 0.2;
+
             // Rotação suave
             child.rotation.y += 0.02;
         }
@@ -1894,33 +1678,33 @@ function animate() {
         bombs.forEach(bomb => {
             const scale = 1 + 0.1 * Math.sin((currentTime - bomb.timer) / 200);
             bomb.mesh.scale.set(scale, scale, scale);
-        });       
-         arena.children.forEach(child => {
+        });
+        arena.children.forEach(child => {
             if (child.userData.isCoin) {
                 child.userData.floatAnimation.offset += 0.03;
-                child.position.y = child.userData.floatAnimation.initialY + 
-                                 Math.sin(child.userData.floatAnimation.offset) * 0.2;
+                child.position.y = child.userData.floatAnimation.initialY +
+                    Math.sin(child.userData.floatAnimation.offset) * 0.2;
                 child.rotation.y += 0.02;
             }
         });
-        
+
         checkCoinCollection();
 
         updatePlayerMovement();
-                updatePowerUps(); // Adicione esta 
-                        checkPowerUpCollection(); // Adicione esta linha
+        updatePowerUps(); // Adicione esta
+        checkPowerUpCollection(); // Adicione esta linha
 
 
-                updateRats(); 
-        updateFreeCamera(); 
-        updateCameraRotation
+        updateRats();
+        updateFreeCamera();
+        updateCameraRotation();
 
         // Modifique esta parte para usar a câmera apropriada
         renderer.render(scene, freeCameraActive ? freeCamera : camera);
         topViewRenderer.render(topViewScene, topViewCamera);
         secondaryRenderer.render(scene, secondaryCamera);
     }
-    }
+}
 
 
 function updatePlayerMovement() {
@@ -1933,7 +1717,7 @@ function updatePlayerMovement() {
         // Calcula a direção do movimento
         const dx = targetGridX - currentGridX;
         const dz = targetGridZ - currentGridZ;
-        
+
         // Rotação instantânea estilo Minecraft
         if (dx > 0) player.rotation.y = -Math.PI / 2;      // Direita
         else if (dx < 0) player.rotation.y = Math.PI / 2;  // Esquerda
@@ -1944,7 +1728,7 @@ function updatePlayerMovement() {
             // Movimento linear suave
             player.position.x = player.userData.startPos.x + (targetPos.x - player.userData.startPos.x) * smoothProgress;
             player.position.z = player.userData.startPos.z + (targetPos.z - player.userData.startPos.z) * smoothProgress;
-            
+
             // Animação suave dos membros
             const walkCycle = smoothProgress * Math.PI * 2; // Ciclo completo de animação
             animatePlayerLimbs(walkCycle);
@@ -1956,7 +1740,7 @@ function updatePlayerMovement() {
             currentGridZ = targetGridZ;
             moveForward = moveBackward = moveLeft = moveRight = false;
             canMove = true;
-            
+
             // Reset suave da animação
             animatePlayerLimbs(Math.PI * 2);
         }
@@ -1974,19 +1758,18 @@ function updateTopViewPlayer() {
 
 function checkPowerUpCollection() {
     const playerGridPos = worldToGrid(player.position.x, player.position.z);
-    const playerWorldPos = gridToWorld(playerGridPos.x, playerGridPos.z);
-    
+
     arena.children.forEach(child => {
         if (child.userData.isPowerUp) {
             const powerUpGridPos = worldToGrid(child.position.x, child.position.z);
-            
+
             if (powerUpGridPos.x === playerGridPos.x && powerUpGridPos.z === playerGridPos.z) {
                 // Remove o power-up
                 arena.remove(child);
-                
+
                 // Aplica o efeito do power-up
                 applyPowerUpEffect();
-                
+
                 // Efeito sonoro de coleta (opcional)
                 if (collectSound) {
                     const sound = new THREE.Audio(listener);
@@ -2000,12 +1783,10 @@ function checkPowerUpCollection() {
 }
 
 
-
-
 function applyPowerUpEffect() {
     // Escolhe aleatoriamente entre vida extra ou boost de velocidade
     const effectType = Math.random() < 0.5 ? 'health' : 'speed';
-    
+
     switch (effectType) {
         case 'health':
             playerLives++;
@@ -2013,16 +1794,16 @@ function applyPowerUpEffect() {
             // Efeito visual opcional
             showFloatingText('+1 VIDA', 0x00ff00);
             break;
-            
+
         case 'speed':
             if (isSpeedBoosted) {
                 clearTimeout(speedBoostTimeout);
             }
-            
+
             isSpeedBoosted = true;
             playerSpeed2 = SPEED_BOOST_MULTIPLIER;
             showFloatingText('VELOCIDADE +', 0xffff00);
-            
+
             speedBoostTimeout = setTimeout(() => {
                 isSpeedBoosted = false;
                 playerSpeed2 = 1.0;
@@ -2036,31 +1817,31 @@ function showFloatingText(text, color) {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     context.font = 'Bold 32px Arial';
-    
+
     // Configura o texto
     const textWidth = context.measureText(text).width;
     canvas.width = textWidth + 20;
     canvas.height = 48;
-    
+
     // Desenha o texto
     context.font = 'Bold 32px Arial';
     context.fillStyle = `#${color.toString(16).padStart(6, '0')}`;
     context.fillText(text, 10, 34);
-    
+
     // Cria a textura e o sprite
     const texture = new THREE.Texture(canvas);
     texture.needsUpdate = true;
-    
-    const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+
+    const spriteMaterial = new THREE.SpriteMaterial({map: texture});
     const sprite = new THREE.Sprite(spriteMaterial);
-    
+
     // Posiciona o sprite acima do jogador
     sprite.position.copy(player.position);
     sprite.position.y += 2;
     sprite.scale.set(2, 1, 1);
-    
+
     scene.add(sprite);
-    
+
     // Remove o sprite após 2 segundos
     setTimeout(() => {
         scene.remove(sprite);
@@ -2070,7 +1851,7 @@ function showFloatingText(text, color) {
 function createCoins() {
     totalCoins = 0;
     collectedCoins = 0;
-    
+
     // Look for empty spaces in the maze
     for (let z = 0; z < gridSize; z++) {
         for (let x = 0; x < gridSize; x++) {
@@ -2079,28 +1860,28 @@ function createCoins() {
                 if (Math.random() < 0.05) {
                     const worldPos = gridToWorld(x, z);
                     const coinGroup = new THREE.Group();
-                    coinGroup.position.set(worldPos.x, wallHeight/2, worldPos.z);
-                    
+                    coinGroup.position.set(worldPos.x, wallHeight / 2, worldPos.z);
+
                     coinGroup.userData.isCoin = true;
                     coinGroup.userData.floatAnimation = {
-                        initialY: wallHeight/2,
+                        initialY: wallHeight / 2,
                         offset: Math.random() * Math.PI * 2 // Random start phase
                     };
-                    
+
                     loadOBJModel(
                         MAP_MODELS[currentMap].coin.obj,
                         MAP_MODELS[currentMap].coin.mtl,
-                        { x: 0, y: 0, z: 0 },
+                        {x: 0, y: 0, z: 0},
                         coinGroup
                     );
-                    
+
                     arena.add(coinGroup);
                     totalCoins++;
                 }
             }
         }
     }
-    
+
     // Update HUD to show coin count
     updateHUD();
 }
@@ -2108,17 +1889,16 @@ function createCoins() {
 
 function checkCoinCollection() {
     const playerGridPos = worldToGrid(player.position.x, player.position.z);
-    const playerWorldPos = gridToWorld(playerGridPos.x, playerGridPos.z);
-    
+
     arena.children.forEach(child => {
         if (child.userData.isCoin) {
             const coinGridPos = worldToGrid(child.position.x, child.position.z);
-            
+
             if (coinGridPos.x === playerGridPos.x && coinGridPos.z === playerGridPos.z) {
                 // Remove the coin
                 arena.remove(child);
                 collectedCoins++;
-                
+
                 // Play collection sound
                 if (collectSound) {
                     const sound = new THREE.Audio(listener);
@@ -2126,13 +1906,13 @@ function checkCoinCollection() {
                     sound.setVolume(0.5);
                     sound.play();
                 }
-                
+
                 // Show floating score
                 showFloatingText('+1', 0xFFD700);
-                
+
                 // Update HUD
                 updateHUD();
-                
+
                 // Check if all coins are collected
                 if (collectedCoins === totalCoins) {
                     showLevelComplete();
@@ -2159,9 +1939,9 @@ function showLevelComplete() {
         <p>All coins collected!</p>
         <button id="nextLevelButton" style="padding: 10px; margin-top: 10px;">Next Level</button>
     `;
-    
+
     gameContainer.appendChild(levelCompleteDiv);
-    
+
     document.getElementById('nextLevelButton').addEventListener('click', () => {
         gameContainer.removeChild(levelCompleteDiv);
         loadNextLevel();
@@ -2174,7 +1954,7 @@ function loadNextLevel() {
     const currentIndex = maps.indexOf(currentMap);
     const nextIndex = (currentIndex + 1) % maps.length;
     currentMap = maps[nextIndex];
-    
+
     // Reset the game with new map
     mazeLayout = GAME_MAPS[currentMap];
     restartGame();
@@ -2196,7 +1976,7 @@ function updateLighting() {
         sunLight.position.x = Math.cos(angle) * sunRadius;
         sunLight.position.y = sunHeight;
         sunLight.position.z = Math.sin(angle) * sunRadius;
-        
+
         // Ajusta intensidade baseada na altura do sol
         const normalizedHeight = (sunHeight + 20) / 50; // normaliza entre 0 e 1
         sunLight.intensity = Math.max(0.2, normalizedHeight * 0.8);
@@ -2227,15 +2007,15 @@ function createClock() {
 function updateClock() {
     const time = Date.now() - gameStartTime;
     const cycleProgress = (time % cycleDuration) / cycleDuration;
-    
+
     // Converte o progresso do ciclo em horas (24 horas por ciclo)
     const totalHours = cycleProgress * 24;
     const hours = Math.floor(totalHours);
     const minutes = Math.floor((totalHours - hours) * 60);
-    
+
     // Formata o tempo com zeros à esquerda
     const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    
+
     // Determina o período do dia
     let period;
     if (hours >= 5 && hours < 12) {
@@ -2247,7 +2027,7 @@ function updateClock() {
     } else {
         period = '🌙 Noite';
     }
-    
+
     clockElement.textContent = `${timeString} - ${period}`;
 }
 
@@ -2263,7 +2043,7 @@ function createLightControlPanel() {
     lightControls.style.borderRadius = '5px';
     lightControls.style.display = 'none'; // Hidden by default
     lightControls.style.zIndex = '1000';
-    
+
     // Create title
     const title = document.createElement('div');
     title.textContent = 'Light Controls';
@@ -2272,29 +2052,29 @@ function createLightControlPanel() {
     title.style.marginBottom = '10px';
     title.style.textAlign = 'center';
     lightControls.appendChild(title);
-    
+
     // Create toggle buttons for each light
     const lights = [
-        { id: 'ambient', name: 'Ambient Light', color: '#ffffff' },
-        { id: 'sun', name: 'Sun Light', color: '#ffff99' },
-        { id: 'fill', name: 'Fill Light', color: '#8fb4d6' },
-        { id: 'rim', name: 'Rim Light', color: '#fff0dd' },
-        { id: 'point1', name: 'Point Light 1', color: '#ffcc77' },
-        { id: 'point2', name: 'Point Light 2', color: '#77ccff' }
+        {id: 'ambient', name: 'Ambient Light', color: '#ffffff'},
+        {id: 'sun', name: 'Sun Light', color: '#ffff99'},
+        {id: 'fill', name: 'Fill Light', color: '#8fb4d6'},
+        {id: 'rim', name: 'Rim Light', color: '#fff0dd'},
+        {id: 'point1', name: 'Point Light 1', color: '#ffcc77'},
+        {id: 'point2', name: 'Point Light 2', color: '#77ccff'}
     ];
-    
+
     lights.forEach(light => {
         const controlRow = document.createElement('div');
         controlRow.style.display = 'flex';
         controlRow.style.alignItems = 'center';
         controlRow.style.marginBottom = '5px';
-        
+
         const label = document.createElement('label');
         label.textContent = light.name;
         label.style.color = 'white';
         label.style.flex = '1';
         label.style.marginRight = '10px';
-        
+
         const toggle = document.createElement('button');
         toggle.id = `${light.id}-toggle`;
         toggle.textContent = 'ON';
@@ -2307,14 +2087,14 @@ function createLightControlPanel() {
         toggle.dataset.state = 'on';
         toggle.dataset.lightId = light.id;
         toggle.dataset.color = light.color;
-        
+
         toggle.addEventListener('click', toggleLight);
-        
+
         controlRow.appendChild(label);
         controlRow.appendChild(toggle);
         lightControls.appendChild(controlRow);
     });
-    
+
     gameContainer.appendChild(lightControls);
 }
 
@@ -2323,9 +2103,9 @@ function toggleLight(event) {
     const button = event.target;
     const lightId = button.dataset.lightId;
     const currentState = button.dataset.state;
-    
+
     if (!lightReferences[lightId]) return;
-    
+
     if (currentState === 'on') {
         // Turn light off
         lightReferences[lightId].visible = false;
