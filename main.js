@@ -462,7 +462,7 @@ hudContainer.style.fontFamily = 'Arial, sans-serif';
 gameContainer.appendChild(hudContainer);
 
 function updateHUD() {
-    hudContainer.textContent = `Lives: ${playerLives} | Coins: ${collectedCoins}/${totalCoins}`;
+    hudContainer.textContent = `Vidas: ${playerLives} | Moedas: ${collectedCoins}/${totalCoins}`;
 }
 
 function init() {
@@ -2019,13 +2019,13 @@ function updateClock() {
     // Determina o período do dia
     let period;
     if (hours >= 5 && hours < 12) {
-        period = '🌅 Manhã';
+        period = 'Manhã';
     } else if (hours >= 12 && hours < 18) {
-        period = '☀️ Tarde';
+        period = 'Tarde';
     } else if (hours >= 18 && hours < 21) {
-        period = '🌇 Anoitecer';
+        period = 'Anoitecer';
     } else {
-        period = '🌙 Noite';
+        period = 'Noite';
     }
 
     clockElement.textContent = `${timeString} - ${period}`;
