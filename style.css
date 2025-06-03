@@ -238,7 +238,7 @@ canvas {
 
 #secondaryViewContainer {
     position: absolute;
-    top: 60px;
+    top: 20px;
     right: 20px;
     width: 200px;
     height: 200px;
