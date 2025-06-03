@@ -1,9 +1,7 @@
-// IMPORTS NODE
 import * as THREE from 'three';
 import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
 import {MTLLoader} from 'three/addons/loaders/MTLLoader.js';
 
-// IMPORTS LOCAIS
 import { GAME_MAPS, PLAYER_TEXTURES, MAP_MODELS, WALL_TEXTURES } from './consts.js';
 
 let gameActive = false;
@@ -35,7 +33,7 @@ const mapsBackButton = document.getElementById('mapsBackButton');
 const mapsPlayButton = document.getElementById('mapsPlayButton');
 
 const GAME_START_TIME = 100000;
-const cycleDuration = 300000; // 5 minutos por ciclo completo
+const cycleDuration = 300000; 
 let gameStartTime = GAME_START_TIME;
 let clockElement;
 
@@ -84,7 +82,7 @@ let currentRotationY = 0;
 
 let isSpeedBoosted = false;
 let speedBoostTimeout = null;
-const SPEED_BOOST_DURATION = 5000; // 5 segundos
+const SPEED_BOOST_DURATION = 5000; 
 const SPEED_BOOST_MULTIPLIER = 1.5;
 
 const RAT_MOVE_INTERVAL = 1000;
@@ -231,14 +229,13 @@ function explodeBomb(bomb) {
     scene.remove(bomb.mesh);
     bombs = bombs.filter(b => b !== bomb);
 
-    // Criar flash de luz
     const explosionLight = new THREE.PointLight(0xffff00, 3, 10);
     explosionLight.position.copy(bomb.mesh.position);
-    explosionLight.position.y = 1; // Posicionar um pouco acima do chão
+    explosionLight.position.y = 1; 
     scene.add(explosionLight);
 
-    // Animação do flash
-    const flashDuration = 500; // duração em millisegundos
+    
+    const flashDuration = 500; 
     const flashStartIntensity = 30;
     const flashStartTime = Date.now();
 
@@ -407,12 +404,12 @@ function loadOBJModel(objPath, mtlPath, position, parentGroup) {
                     }
                 });
 
-                // Ajuste a escala com base no mapa atual
+                
                 let scale = 1;
                 if (objPath.includes('spider')) scale = 0.5;
                 if (objPath.includes('robot')) scale = 0.8;
                 if (objPath.includes('barrel')) scale = 0.7;
-                // Adicione mais ajustes conforme necessário
+                
 
                 object.position.set(position.x, position.y, position.z);
                 object.scale.set(scale, scale, scale);
@@ -466,11 +463,11 @@ function updateHUD() {
 }
 
 function init() {
-    // Scene setup with improved background
+    
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87CEEB); // Cor do céu durante o dia
+    scene.background = new THREE.Color(0x87CEEB); 
 
-    // Camera setup
+    
     const aspect = window.innerWidth / window.innerHeight;
     camera = new THREE.OrthographicCamera(
         -arenaSize * aspect / 2,
@@ -483,7 +480,7 @@ function init() {
     camera.position.set(arenaSize, arenaSize, arenaSize);
     camera.lookAt(0, 0, 0);
 
-    // Enhanced renderer setup
+    
     renderer = new THREE.WebGLRenderer({
         antialias: true,
         logarithmicDepthBuffer: true
@@ -496,17 +493,17 @@ function init() {
     renderer.toneMappingExposure = 1.0;
     gameContainer.appendChild(renderer.domElement);
 
-    // Lighting setup
-    // Soft ambient light
+    
+    
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
     scene.add(ambientLight);
 
-    // Main sun light
+    
     const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
     sunLight.position.set(20, 30, 20);
     sunLight.castShadow = true;
 
-    // Enhanced shadow settings
+    
     sunLight.shadow.mapSize.width = 2048;
     sunLight.shadow.mapSize.height = 2048;
     sunLight.shadow.camera.near = 0.5;
@@ -519,17 +516,17 @@ function init() {
     sunLight.shadow.normalBias = 0.02;
     scene.add(sunLight);
 
-    // Fill light
+    
     const fillLight = new THREE.DirectionalLight(0x8fb4d6, 0.3);
     fillLight.position.set(-20, 20, -20);
     scene.add(fillLight);
 
-    // Rim light
+    
     const rimLight = new THREE.DirectionalLight(0xfff0dd, 0.2);
     rimLight.position.set(0, 10, -20);
     scene.add(rimLight);
 
-    // Point lights for atmosphere
+    
     const pointLight1 = new THREE.PointLight(0xffcc77, 5, 30);
     pointLight1.position.set(arenaSize / 3, 5, arenaSize / 3);
     scene.add(pointLight1);
@@ -538,7 +535,7 @@ function init() {
     pointLight2.position.set(-arenaSize / 3, 5, -arenaSize / 3);
     scene.add(pointLight2);
 
-    // Top view setup
+    
     topViewScene = new THREE.Scene();
     topViewScene.background = new THREE.Color(0x000000);
 
@@ -558,7 +555,7 @@ function init() {
     topViewRenderer.shadowMap.enabled = true;
     document.getElementById('topViewContainer').appendChild(topViewRenderer.domElement);
 
-    // Secondary view setup
+    
     secondaryScene = new THREE.Scene();
     secondaryScene.background = new THREE.Color(0x000000);
 
@@ -586,7 +583,7 @@ function init() {
     lightReferences.point2 = pointLight2;
 
 
-    // Create game elements
+    
     createArena();
     createTopViewArena();
     createCoins();
@@ -598,12 +595,12 @@ function init() {
     createClock();
     gameStartTime = GAME_START_TIME;
 
-    // Event listeners
+    
     document.addEventListener('keydown', onKeyDown, false);
     document.addEventListener('keyup', onKeyUp, false);
     window.addEventListener('resize', onWindowResize, false);
 
-    // Start animation loop
+    
     animate();
 }
 
@@ -612,7 +609,7 @@ function createFreeCamera() {
     freeCamera.position.set(0, 10, 20);
     freeCamera.lookAt(0, 0, 0);
 
-    // Reset das rotações iniciais
+    
     targetRotationX = 0;
     targetRotationY = 0;
     currentRotationX = 0;
@@ -633,22 +630,21 @@ function onPointerLockChange() {
 function onMouseMove(event) {
     if (!freeCameraActive || !freeCamera) return;
 
-    // Ajustar sensibilidade do mouse
+    
     const sensitivity = 0.002;
 
-    // Usar movementX e movementY para rotação mais suave
     const deltaX = event.movementX || 0;
     const deltaY = event.movementY || 0;
 
-    // Atualizar rotações alvo
+
     targetRotationY -= deltaX * sensitivity;
     targetRotationX -= deltaY * sensitivity;
 
-    // Limitar rotação vertical
+
     targetRotationX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, targetRotationX));
 
-    // Aplicar rotações diretamente
-    freeCamera.rotation.order = 'YXZ'; // Importante para evitar gimbal lock
+
+    freeCamera.rotation.order = 'YXZ'; 
     freeCamera.rotation.x = targetRotationX;
     freeCamera.rotation.y = targetRotationY;
 }
@@ -656,11 +652,11 @@ function onMouseMove(event) {
 function updateCameraRotation() {
     if (!freeCameraActive || !freeCamera) return;
 
-    // Suavizar a rotação (opcional, pode remover se quiser movimento mais direto)
+    
     currentRotationX = THREE.MathUtils.lerp(currentRotationX, targetRotationX, 0.1);
     currentRotationY = THREE.MathUtils.lerp(currentRotationY, targetRotationY, 0.1);
 
-    // Aplicar rotações
+    
     freeCamera.rotation.x = currentRotationX;
     freeCamera.rotation.y = currentRotationY;
 }
@@ -668,7 +664,7 @@ function updateCameraRotation() {
 function createArena() {
     arena = new THREE.Group();
 
-    // Get a random floor texture for this level
+    
     const floorTexturePath = getRandomTexture(WALL_TEXTURES[currentMap].floor);
     const floorTexture = textureLoader.load(floorTexturePath);
     floorTexture.wrapS = THREE.RepeatWrapping;
@@ -715,7 +711,7 @@ let damageSound;
 
 let collectSound;
 
-// Add this function before createArena()
+
 function getRandomTexture(textureArray) {
     return textureArray[Math.floor(Math.random() * textureArray.length)];
 }
@@ -748,7 +744,7 @@ function gameOver() {
     gameOverDiv.style.textAlign = 'center';
     gameOverDiv.innerHTML = `
         <h2>Game Over!</h2>
-        <button id="restartButton" style="padding: 10px; margin-top: 10px;">Restart</button>
+        <button id="restartButton" style="padding: 10px; margin-top: 10px;">Reiniciar</button>
     `;
 
     gameContainer.appendChild(gameOverDiv);
@@ -761,20 +757,20 @@ function gameOver() {
 
 function restartGame() {
 
-    // Stop the animation loop
+
     gameActive = false;
 
-    // Remove old renderer elements
+
     gameContainer.removeChild(renderer.domElement);
     document.getElementById('topViewContainer').removeChild(topViewRenderer.domElement);
     document.getElementById('secondaryViewContainer').removeChild(secondaryRenderer.domElement);
 
-    // Dispose renderers
+
     renderer.dispose();
     topViewRenderer.dispose();
     secondaryRenderer.dispose();
 
-    // Remove event listeners
+
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('keyup', onKeyUp);
     window.removeEventListener('resize', onWindowResize);
@@ -784,7 +780,7 @@ function restartGame() {
         gameContainer.removeChild(clockElement);
     }
 
-    // Clear all game objects
+
     while (scene.children.length > 0) {
         const object = scene.children[0];
         if (object.geometry) object.geometry.dispose();
@@ -798,7 +794,7 @@ function restartGame() {
         scene.remove(object);
     }
 
-    // Clear secondary and top view scenes
+
     while (secondaryScene.children.length > 0) {
         secondaryScene.remove(secondaryScene.children[0]);
     }
@@ -806,7 +802,7 @@ function restartGame() {
         topViewScene.remove(topViewScene.children[0]);
     }
 
-    // Reset all game states
+
     bombs = [];
     explosions = [];
     rats = [];
@@ -824,30 +820,28 @@ function restartGame() {
     moveLeft = false;
     moveRight = false;
 
-    // Clear timeouts
+
     if (speedBoostTimeout) {
         clearTimeout(speedBoostTimeout);
         speedBoostTimeout = null;
     }
 
-    // Clear scene references
+
     player = null;
     arena = null;
     topViewPlayer = null;
     topViewArena = null;
 
-    // Reset player lives if starting fresh game
+
     if (isGameOver) {
         playerLives = 3;
         isGameOver = false;
     }
 
-    // Create fresh scenes
     scene = new THREE.Scene();
     secondaryScene = new THREE.Scene();
     topViewScene = new THREE.Scene();
 
-    // Reinitialize game
     gameActive = true;
     init();
     updateHUD();
@@ -879,15 +873,12 @@ function createMazeBlocks() {
     for (let z = 0; z < gridSize; z++) {
         for (let x = 0; x < gridSize; x++) {
             if (mazeLayout[z][x] === 1) {
-                // Select random textures for this specific block
                 const sidesTexture = textureLoader.load(getRandomTexture(WALL_TEXTURES[currentMap].sides));
                 const topTexture = textureLoader.load(getRandomTexture(WALL_TEXTURES[currentMap].top));
 
-                // Configure texture wrapping
                 sidesTexture.wrapS = sidesTexture.wrapT = THREE.RepeatWrapping;
                 topTexture.wrapS = topTexture.wrapT = THREE.RepeatWrapping;
 
-                // Create materials with the selected textures
                 const wallMaterials = [
                     new THREE.MeshLambertMaterial({map: sidesTexture}), // right
                     new THREE.MeshLambertMaterial({map: sidesTexture}), // left
@@ -897,7 +888,6 @@ function createMazeBlocks() {
                     new THREE.MeshLambertMaterial({map: sidesTexture})  // back
                 ];
 
-                // Create block with these textures
                 const blockGeometry = new THREE.BoxGeometry(cellSize, wallHeight, cellSize);
                 const block = new THREE.Mesh(blockGeometry, wallMaterials);
                 const worldPos = gridToWorld(x, z);
@@ -905,7 +895,6 @@ function createMazeBlocks() {
                 block.castShadow = true;
                 block.receiveShadow = true;
 
-                // Adjust UV coordinates for proper texture scaling
                 const uvAttribute = block.geometry.attributes.uv;
                 for (let i = 0; i < uvAttribute.count; i++) {
                     uvAttribute.setXY(i,
@@ -1001,24 +990,20 @@ function createRat(gridX, gridZ) {
 }
 
 function initializeRats() {
-    // Clear any existing rats
     rats = [];
 
     const validPositions = [];
 
-    // Find all empty cells
     for (let z = 0; z < gridSize; z++) {
         for (let x = 0; x < gridSize; x++) {
             if (mazeLayout[z][x] === 0) {
-                // Store position as an object
                 validPositions.push({x, z});
             }
         }
     }
 
-    // Filter positions that are too close to player starting position
     const playerStartPos = {x: currentGridX, z: currentGridZ};
-    const safeDistance = 4; // Minimum cells away from player
+    const safeDistance = 4; 
     const safePositions = validPositions.filter(pos => {
         const distance = Math.sqrt(
             Math.pow(pos.x - playerStartPos.x, 2) +
@@ -1027,21 +1012,16 @@ function initializeRats() {
         return distance >= safeDistance;
     });
 
-    // Choose positions for rats (either safe or all valid if not enough safe ones)
     const positionsToUse = safePositions.length >= 4 ? safePositions : validPositions;
 
-    // Create exactly 4 rats
     for (let i = 0; i < 4; i++) {
-        if (positionsToUse.length === 0) break; // Safety check
+        if (positionsToUse.length === 0) break; 
 
-        // Select random position from available positions
         const randomIndex = Math.floor(Math.random() * positionsToUse.length);
         const position = positionsToUse[randomIndex];
 
-        // Remove selected position so we don't use it again
         positionsToUse.splice(randomIndex, 1);
 
-        // Create rat at chosen position
         const rat = createRat(position.x, position.z);
         rats.push(rat);
     }
@@ -1050,16 +1030,13 @@ function initializeRats() {
 }
 
 function hasLineOfSight(ratGridX, ratGridZ, playerGridX, playerGridZ) {
-    // Se não estiver na mesma linha ou coluna, não há linha de visão
     if (ratGridX !== playerGridX && ratGridZ !== playerGridZ) {
         return false;
     }
 
-    // Verifica a direção
     const dx = Math.sign(playerGridX - ratGridX);
     const dz = Math.sign(playerGridZ - ratGridZ);
 
-    // Verifica cada célula entre o rato e o jogador
     let x = ratGridX;
     let z = ratGridZ;
 
@@ -1067,7 +1044,6 @@ function hasLineOfSight(ratGridX, ratGridZ, playerGridX, playerGridZ) {
         x += dx;
         z += dz;
 
-        // Se encontrar uma parede no caminho, não há linha de visão
         if (mazeLayout[z][x] === 1 || mazeLayout[z][x] === 2) {
             return false;
         }
@@ -1082,11 +1058,9 @@ function moveRats() {
     rats.forEach(rat => {
         if (!rat.isMoving) {
             if (hasLineOfSight(rat.gridX, rat.gridZ, playerGridPos.x, playerGridPos.z)) {
-                // Atualiza última posição conhecida e marca como perseguindo
                 rat.lastKnownPlayerPos = {x: playerGridPos.x, z: playerGridPos.z};
                 rat.isChasing = true;
 
-                // Modo perseguição
                 const dx = Math.sign(playerGridPos.x - rat.gridX);
                 const dz = Math.sign(playerGridPos.z - rat.gridZ);
 
@@ -1100,7 +1074,6 @@ function moveRats() {
                     rat.isMoving = true;
                 }
             } else if (rat.isChasing && rat.lastKnownPlayerPos) {
-                // Move em direção à última posição conhecida
                 const dx = Math.sign(rat.lastKnownPlayerPos.x - rat.gridX);
                 const dz = Math.sign(rat.lastKnownPlayerPos.z - rat.gridZ);
 
@@ -1120,12 +1093,10 @@ function moveRats() {
                     rat.isMoving = true;
                 } else if (rat.gridX === rat.lastKnownPlayerPos.x &&
                     rat.gridZ === rat.lastKnownPlayerPos.z) {
-                    // Chegou à última posição conhecida, volta ao movimento aleatório
                     rat.lastKnownPlayerPos = null;
                     rat.isChasing = false;
                 }
             } else {
-                // Movimento aleatório normal
                 const directions = [
                     {dx: 1, dz: 0, rotation: -Math.PI / 2},
                     {dx: -1, dz: 0, rotation: Math.PI / 2},
@@ -1151,16 +1122,12 @@ function moveRats() {
     });
 }
 
-// Aumente a frequência de movimento dos ratos quando estão perseguindo
-// Modifique a constante RAT_MOVE_INTERVAL para um valor menor
 
 function updateRats() {
     const currentTime = Date.now();
-    const DAMAGE_COOLDOWN = 3000; // 
+    const DAMAGE_COOLDOWN = 3000; 
     rats.forEach(rat => {
-        // Verifica colisão com o jogador
         if (checkRatCollision(rat) && !isGameOver) {
-            // Verifica se passou tempo suficiente desde o último dano
             if (currentTime - rat.lastDamageTime >= DAMAGE_COOLDOWN) {
                 if (damageSound) {
                     const sound = new THREE.Audio(listener);
@@ -1172,7 +1139,6 @@ function updateRats() {
                 playerLives--;
                 updateHUD();
 
-                // Atualiza o tempo do último dano
                 rat.lastDamageTime = currentTime;
 
                 if (playerLives <= 0) {
@@ -1244,14 +1210,12 @@ function createTopViewMazeBlocks() {
 }
 
 function createWall(width, height, depth) {
-    // Select random textures
     const sidesTexture = textureLoader.load(getRandomTexture(WALL_TEXTURES[currentMap].sides));
     const topTexture = textureLoader.load(getRandomTexture(WALL_TEXTURES[currentMap].top));
 
     sidesTexture.wrapS = sidesTexture.wrapT = THREE.RepeatWrapping;
     topTexture.wrapS = topTexture.wrapT = THREE.RepeatWrapping;
 
-    // Adjust texture repetition based on wall dimensions
     sidesTexture.repeat.set(width / cellSize, height / cellSize);
     topTexture.repeat.set(width / cellSize, depth / cellSize);
 
@@ -1280,18 +1244,15 @@ function createTopViewWall(width, height, depth, color) {
 function createPlayer() {
     player = new THREE.Group();
 
-    // Carrega as texturas
     const hatTexture = textureLoader.load(PLAYER_TEXTURES.hat);
     const shirtTexture = textureLoader.load(PLAYER_TEXTURES.shirt);
     const pantsTexture = textureLoader.load(PLAYER_TEXTURES.pants);
 
-    // Configura as texturas
     [hatTexture, shirtTexture, pantsTexture].forEach(texture => {
         texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
         texture.repeat.set(1, 1);
     });
 
-    // Corpo com textura de camisa
     const bodyGeometry = new THREE.BoxGeometry(0.8, 1.0, 0.4);
     const bodyMaterial = new THREE.MeshLambertMaterial({
         map: shirtTexture,
@@ -1301,26 +1262,22 @@ function createPlayer() {
     body.position.y = 0.8;
     body.castShadow = true;
 
-    // Cabeça permanece com a cor da pele
     const headGeometry = new THREE.SphereGeometry(0.4, 16, 16);
     const headMaterial = new THREE.MeshLambertMaterial({color: 0xffcc99});
     const head = new THREE.Mesh(headGeometry, headMaterial);
     head.position.y = 1.5;
     head.castShadow = true;
 
-    // Chapéu com textura própria
     const hatGroup = new THREE.Group();
     const hatMaterial = new THREE.MeshLambertMaterial({
         map: hatTexture,
         side: THREE.DoubleSide
     });
 
-    // Aba do chapéu
     const brimGeometry = new THREE.CylinderGeometry(0.6, 0.6, 0.05, 32);
     const brim = new THREE.Mesh(brimGeometry, hatMaterial);
     brim.position.y = 1.9;
 
-    // Copa do chapéu
     const crownGeometry = new THREE.CylinderGeometry(0.3, 0.35, 0.3, 32);
     const crown = new THREE.Mesh(crownGeometry, hatMaterial);
     crown.position.y = 2.05;
@@ -1328,7 +1285,6 @@ function createPlayer() {
     hatGroup.add(brim);
     hatGroup.add(crown);
 
-    // Braços com textura de camisa
     const armGeometry = new THREE.BoxGeometry(0.2, 0.6, 0.2);
     const armMaterial = new THREE.MeshLambertMaterial({
         map: shirtTexture,
@@ -1343,7 +1299,6 @@ function createPlayer() {
     rightArm.position.set(0.5, 0.9, 0);
     rightArm.castShadow = true;
 
-    // Pernas com textura de calça
     const legGeometry = new THREE.BoxGeometry(0.25, 0.7, 0.25);
     const legMaterial = new THREE.MeshLambertMaterial({
         map: pantsTexture,
@@ -1362,8 +1317,6 @@ function createPlayer() {
     rightLegGroup.position.set(0.3, 0.3, 0);
     rightLegGroup.add(rightLeg);
 
-    // Adiciona olhos e boca
-    // Eyes
     const eyeGeometry = new THREE.SphereGeometry(0.08, 8, 8);
     const eyeMaterial = new THREE.MeshLambertMaterial({color: 0xffffff});
     const eyeballMaterial = new THREE.MeshLambertMaterial({color: 0x000000});
@@ -1384,14 +1337,12 @@ function createPlayer() {
     rightEye.add(rightEyeball);
     rightEye.position.set(0.15, 1.6, -0.35);
 
-    // Mouth
     const mouthGeometry = new THREE.TorusGeometry(0.1, 0.02, 8, 12, Math.PI);
     const mouthMaterial = new THREE.MeshLambertMaterial({color: 0x333333});
     const mouth = new THREE.Mesh(mouthGeometry, mouthMaterial);
     mouth.position.set(0, 1.35, -0.38);
     mouth.rotation.z = Math.PI;
 
-    // Adiciona todas as partes ao grupo principal
     player.add(body);
     player.add(head);
     player.add(hatGroup);
@@ -1403,7 +1354,6 @@ function createPlayer() {
     player.add(rightEye);
     player.add(mouth);
 
-    // Mantém referências para animação
     player.userData = {
         leftArm,
         rightArm,
@@ -1413,7 +1363,6 @@ function createPlayer() {
         walkingTime: 0
     };
 
-    // Posiciona o jogador
     const initialPos = gridToWorld(currentGridX, currentGridZ);
     player.position.set(initialPos.x, 0, initialPos.z);
 
@@ -1426,19 +1375,15 @@ function animatePlayerLimbs(walkCycle) {
     const {leftArm, rightArm, leftLegGroup, rightLegGroup} = player.userData;
 
     if (!canMove) {
-        // Animação suave dos membros
         const armSwing = Math.sin(walkCycle) * LIMB_ROTATION;
         const legSwing = -Math.sin(walkCycle) * LIMB_ROTATION;
 
-        // Aplica rotação suave nos braços
         leftArm.rotation.x = THREE.MathUtils.lerp(leftArm.rotation.x, armSwing, 0.3);
         rightArm.rotation.x = THREE.MathUtils.lerp(rightArm.rotation.x, -armSwing, 0.3);
 
-        // Aplica rotação suave nas pernas usando os grupos
         leftLegGroup.rotation.x = THREE.MathUtils.lerp(leftLegGroup.rotation.x, legSwing, 0.3);
         rightLegGroup.rotation.x = THREE.MathUtils.lerp(rightLegGroup.rotation.x, -legSwing, 0.3);
     } else {
-        // Retorno suave à posição inicial
         leftArm.rotation.x = THREE.MathUtils.lerp(leftArm.rotation.x, 0, 0.3);
         rightArm.rotation.x = THREE.MathUtils.lerp(rightArm.rotation.x, 0, 0.3);
         leftLegGroup.rotation.x = THREE.MathUtils.lerp(leftLegGroup.rotation.x, 0, 0.3);
@@ -1501,7 +1446,6 @@ function onKeyDown(event) {
 
     switch (event.code) {
         case 'KeyL':
-            // Toggle light controls panel
             lightControlsVisible = !lightControlsVisible;
             lightControls.style.display = lightControlsVisible ? 'block' : 'none';
             break;
@@ -1637,14 +1581,12 @@ function onWindowResize() {
 
     const aspect = window.innerWidth / window.innerHeight;
 
-    // Atualizar câmera ortográfica existente
     camera.left = -arenaSize * aspect / 2;
     camera.right = arenaSize * aspect / 2;
     camera.top = arenaSize / 2;
     camera.bottom = -arenaSize / 2;
     camera.updateProjectionMatrix();
 
-    // Atualizar câmera livre
     if (freeCamera) {
         freeCamera.aspect = aspect;
         freeCamera.updateProjectionMatrix();
@@ -1657,12 +1599,10 @@ function onWindowResize() {
 function updatePowerUps() {
     arena.children.forEach(child => {
         if (child.userData.isPowerUp) {
-            // Animação flutuante
             child.userData.floatAnimation.offset += 0.05;
             child.position.y = child.userData.floatAnimation.initialY +
                 Math.sin(child.userData.floatAnimation.offset) * 0.2;
 
-            // Rotação suave
             child.rotation.y += 0.02;
         }
     });
@@ -1691,15 +1631,14 @@ function animate() {
         checkCoinCollection();
 
         updatePlayerMovement();
-        updatePowerUps(); // Adicione esta
-        checkPowerUpCollection(); // Adicione esta linha
+        updatePowerUps(); 
+        checkPowerUpCollection(); 
 
 
         updateRats();
         updateFreeCamera();
         updateCameraRotation();
 
-        // Modifique esta parte para usar a câmera apropriada
         renderer.render(scene, freeCameraActive ? freeCamera : camera);
         topViewRenderer.render(topViewScene, topViewCamera);
         secondaryRenderer.render(scene, secondaryCamera);
@@ -1709,31 +1648,26 @@ function animate() {
 
 function updatePlayerMovement() {
     if (!canMove) {
-        const MOVEMENT_DURATION = 500 / playerSpeed2; // Movimento mais rápido quando com speed boost
+        const MOVEMENT_DURATION = 500 / playerSpeed2; 
         const targetPos = gridToWorld(targetGridX, targetGridZ);
         const progress = (Date.now() - player.userData.moveStartTime) / MOVEMENT_DURATION;
         const smoothProgress = Math.min(progress, 1);
 
-        // Calcula a direção do movimento
         const dx = targetGridX - currentGridX;
         const dz = targetGridZ - currentGridZ;
 
-        // Rotação instantânea estilo Minecraft
         if (dx > 0) player.rotation.y = -Math.PI / 2;      // Direita
         else if (dx < 0) player.rotation.y = Math.PI / 2;  // Esquerda
         else if (dz > 0) player.rotation.y = Math.PI;      // Baixo
         else if (dz < 0) player.rotation.y = 0;            // Cima
 
         if (smoothProgress < 1) {
-            // Movimento linear suave
             player.position.x = player.userData.startPos.x + (targetPos.x - player.userData.startPos.x) * smoothProgress;
             player.position.z = player.userData.startPos.z + (targetPos.z - player.userData.startPos.z) * smoothProgress;
 
-            // Animação suave dos membros
-            const walkCycle = smoothProgress * Math.PI * 2; // Ciclo completo de animação
+            const walkCycle = smoothProgress * Math.PI * 2; 
             animatePlayerLimbs(walkCycle);
         } else {
-            // Finaliza o movimento
             player.position.x = targetPos.x;
             player.position.z = targetPos.z;
             currentGridX = targetGridX;
@@ -1741,7 +1675,6 @@ function updatePlayerMovement() {
             moveForward = moveBackward = moveLeft = moveRight = false;
             canMove = true;
 
-            // Reset suave da animação
             animatePlayerLimbs(Math.PI * 2);
         }
 
@@ -1764,13 +1697,10 @@ function checkPowerUpCollection() {
             const powerUpGridPos = worldToGrid(child.position.x, child.position.z);
 
             if (powerUpGridPos.x === playerGridPos.x && powerUpGridPos.z === playerGridPos.z) {
-                // Remove o power-up
                 arena.remove(child);
 
-                // Aplica o efeito do power-up
                 applyPowerUpEffect();
 
-                // Efeito sonoro de coleta (opcional)
                 if (collectSound) {
                     const sound = new THREE.Audio(listener);
                     sound.setBuffer(collectSound);
@@ -1784,14 +1714,12 @@ function checkPowerUpCollection() {
 
 
 function applyPowerUpEffect() {
-    // Escolhe aleatoriamente entre vida extra ou boost de velocidade
     const effectType = Math.random() < 0.5 ? 'health' : 'speed';
 
     switch (effectType) {
         case 'health':
             playerLives++;
             updateHUD();
-            // Efeito visual opcional
             showFloatingText('+1 VIDA', 0x00ff00);
             break;
 
@@ -1818,31 +1746,26 @@ function showFloatingText(text, color) {
     const context = canvas.getContext('2d');
     context.font = 'Bold 32px Arial';
 
-    // Configura o texto
     const textWidth = context.measureText(text).width;
     canvas.width = textWidth + 20;
     canvas.height = 48;
 
-    // Desenha o texto
     context.font = 'Bold 32px Arial';
     context.fillStyle = `#${color.toString(16).padStart(6, '0')}`;
     context.fillText(text, 10, 34);
 
-    // Cria a textura e o sprite
     const texture = new THREE.Texture(canvas);
     texture.needsUpdate = true;
 
     const spriteMaterial = new THREE.SpriteMaterial({map: texture});
     const sprite = new THREE.Sprite(spriteMaterial);
 
-    // Posiciona o sprite acima do jogador
     sprite.position.copy(player.position);
     sprite.position.y += 2;
     sprite.scale.set(2, 1, 1);
 
     scene.add(sprite);
 
-    // Remove o sprite após 2 segundos
     setTimeout(() => {
         scene.remove(sprite);
     }, 2000);
@@ -1852,11 +1775,9 @@ function createCoins() {
     totalCoins = 0;
     collectedCoins = 0;
 
-    // Look for empty spaces in the maze
     for (let z = 0; z < gridSize; z++) {
         for (let x = 0; x < gridSize; x++) {
             if (mazeLayout[z][x] === 0) {
-                // Add coin with 30% probability if space is empty
                 if (Math.random() < 0.05) {
                     const worldPos = gridToWorld(x, z);
                     const coinGroup = new THREE.Group();
@@ -1865,7 +1786,7 @@ function createCoins() {
                     coinGroup.userData.isCoin = true;
                     coinGroup.userData.floatAnimation = {
                         initialY: wallHeight / 2,
-                        offset: Math.random() * Math.PI * 2 // Random start phase
+                        offset: Math.random() * Math.PI * 2 
                     };
 
                     loadOBJModel(
@@ -1882,7 +1803,6 @@ function createCoins() {
         }
     }
 
-    // Update HUD to show coin count
     updateHUD();
 }
 
@@ -1895,11 +1815,9 @@ function checkCoinCollection() {
             const coinGridPos = worldToGrid(child.position.x, child.position.z);
 
             if (coinGridPos.x === playerGridPos.x && coinGridPos.z === playerGridPos.z) {
-                // Remove the coin
                 arena.remove(child);
                 collectedCoins++;
 
-                // Play collection sound
                 if (collectSound) {
                     const sound = new THREE.Audio(listener);
                     sound.setBuffer(collectSound);
@@ -1907,13 +1825,10 @@ function checkCoinCollection() {
                     sound.play();
                 }
 
-                // Show floating score
                 showFloatingText('+1', 0xFFD700);
 
-                // Update HUD
                 updateHUD();
 
-                // Check if all coins are collected
                 if (collectedCoins === totalCoins) {
                     showLevelComplete();
                 }
@@ -1935,9 +1850,9 @@ function showLevelComplete() {
     levelCompleteDiv.style.borderRadius = '10px';
     levelCompleteDiv.style.textAlign = 'center';
     levelCompleteDiv.innerHTML = `
-        <h2>Level Complete!</h2>
-        <p>All coins collected!</p>
-        <button id="nextLevelButton" style="padding: 10px; margin-top: 10px;">Next Level</button>
+        <h2>Nivel Completo!</h2>
+        <p>Tens as moedas todsa!</p>
+        <button id="nextLevelButton" style="padding: 10px; margin-top: 10px;">Proximo Nivel</button>
     `;
 
     gameContainer.appendChild(levelCompleteDiv);
@@ -1949,24 +1864,21 @@ function showLevelComplete() {
 }
 
 function loadNextLevel() {
-    // Cycle through maps
     const maps = Object.keys(GAME_MAPS);
     const currentIndex = maps.indexOf(currentMap);
     const nextIndex = (currentIndex + 1) % maps.length;
     currentMap = maps[nextIndex];
 
-    // Reset the game with new map
     mazeLayout = GAME_MAPS[currentMap];
     restartGame();
 }
 
 
 function updateLighting() {
-    const time = Date.now() - GAME_START_TIME; // Use GAME_START_TIME constante
+    const time = Date.now() - GAME_START_TIME; 
     const cycleProgress = (time % cycleDuration) / cycleDuration;
     const angle = (cycleProgress * Math.PI * 2) + (Math.PI / 2);
 
-    // Atualiza posição do sol
     const sunRadius = 50;
     const sunHeight = Math.sin(angle) * 20 + 30;
     const sunLight = scene.children.find(child => child.isDirectionalLight);
@@ -1975,12 +1887,10 @@ function updateLighting() {
         sunLight.position.y = sunHeight;
         sunLight.position.z = Math.sin(angle) * sunRadius;
 
-        // Ajusta intensidade baseada na altura do sol
         const normalizedHeight = (sunHeight + 20) / 50;
         sunLight.intensity = Math.max(0.2, normalizedHeight * 0.8);
     }
 
-    // Ajusta cor do céu baseado no ciclo
     const dayColor = new THREE.Color(0x87CEEB);
     const nightColor = new THREE.Color(0x1a2b4c);
     const skyColor = new THREE.Color();
@@ -2003,19 +1913,16 @@ function createClock() {
 }
 
 function updateClock() {
-    const time = Date.now() - GAME_START_TIME;  // Use GAME_START_TIME constante
+    const time = Date.now() - GAME_START_TIME;  
     const cycleProgress = (time % cycleDuration) / cycleDuration;
 
-    // Calcula as horas baseado no ângulo do sol (começa ao meio-dia)
     const angle = (cycleProgress * Math.PI * 2) + (Math.PI / 2);
     const totalHours = ((angle / (Math.PI * 2)) * 24 + 12) % 24;
     const hours = Math.floor(totalHours);
     const minutes = Math.floor((totalHours - hours) * 60);
 
-    // Formata o tempo
     const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 
-    // Determina o período do dia baseado no ângulo do sol
     let period;
     if (hours >= 5 && hours < 12) {
         period = 'Manhã';
@@ -2032,7 +1939,6 @@ function updateClock() {
 
 
 function createLightControlPanel() {
-    // Create the main container
     lightControls = document.createElement('div');
     lightControls.style.position = 'absolute';
     lightControls.style.bottom = '10px';
@@ -2040,19 +1946,17 @@ function createLightControlPanel() {
     lightControls.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
     lightControls.style.padding = '10px';
     lightControls.style.borderRadius = '5px';
-    lightControls.style.display = 'none'; // Hidden by default
+    lightControls.style.display = 'none'; 
     lightControls.style.zIndex = '1000';
 
-    // Create title
     const title = document.createElement('div');
-    title.textContent = 'Light Controls';
+    title.textContent = 'Controles de Luz';
     title.style.color = 'white';
     title.style.fontWeight = 'bold';
     title.style.marginBottom = '10px';
     title.style.textAlign = 'center';
     lightControls.appendChild(title);
 
-    // Create toggle buttons for each light
     const lights = [
         {id: 'ambient', name: 'Ambient Light', color: '#ffffff'},
         {id: 'sun', name: 'Sun Light', color: '#ffff99'},
@@ -2106,14 +2010,12 @@ function toggleLight(event) {
     if (!lightReferences[lightId]) return;
 
     if (currentState === 'on') {
-        // Turn light off
         lightReferences[lightId].visible = false;
         button.textContent = 'OFF';
         button.style.backgroundColor = '#333';
         button.style.color = '#fff';
         button.dataset.state = 'off';
     } else {
-        // Turn light on
         lightReferences[lightId].visible = true;
         button.textContent = 'ON';
         button.style.backgroundColor = button.dataset.color;
