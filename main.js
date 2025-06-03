@@ -34,9 +34,9 @@ const instructionsBackButton = document.getElementById('instructionsBackButton')
 const mapsBackButton = document.getElementById('mapsBackButton');
 const mapsPlayButton = document.getElementById('mapsPlayButton');
 
-
+const GAME_START_TIME = 100000;
 const cycleDuration = 300000; // 5 minutos por ciclo completo
-let gameStartTime = Date.now();
+let gameStartTime = GAME_START_TIME;
 let clockElement;
 
 let lightControls;
@@ -596,7 +596,7 @@ function init() {
     createLightControlPanel();
 
     createClock();
-    gameStartTime = Date.now() - (cycleDuration / 3);
+    gameStartTime = GAME_START_TIME;
 
     // Event listeners
     document.addEventListener('keydown', onKeyDown, false);
@@ -779,7 +779,7 @@ function restartGame() {
     document.removeEventListener('keyup', onKeyUp);
     window.removeEventListener('resize', onWindowResize);
 
-    gameStartTime = Date.now() - (cycleDuration / 3); // Reset game time
+    gameStartTime = GAME_START_TIME;
     if (clockElement) {
         gameContainer.removeChild(clockElement);
     }
@@ -1962,11 +1962,9 @@ function loadNextLevel() {
 
 
 function updateLighting() {
-    const cycleDuration = 300000; // 5 minutos por ciclo completo
-    const time = (Date.now() - gameStartTime) % cycleDuration; // Usa gameStartTime como referência
-    const cycleProgress = time / cycleDuration;
-    // Ajusta o ângulo inicial para começar com o sol em uma posição específica (meio-dia)
-    const angle = (cycleProgress * Math.PI * 2) + (Math.PI / 2); // Adiciona PI/2 para começar ao meio-dia
+    const time = Date.now() - GAME_START_TIME; // Use GAME_START_TIME constante
+    const cycleProgress = (time % cycleDuration) / cycleDuration;
+    const angle = (cycleProgress * Math.PI * 2) + (Math.PI / 2);
 
     // Atualiza posição do sol
     const sunRadius = 50;
@@ -1978,7 +1976,7 @@ function updateLighting() {
         sunLight.position.z = Math.sin(angle) * sunRadius;
 
         // Ajusta intensidade baseada na altura do sol
-        const normalizedHeight = (sunHeight + 20) / 50; // normaliza entre 0 e 1
+        const normalizedHeight = (sunHeight + 20) / 50;
         sunLight.intensity = Math.max(0.2, normalizedHeight * 0.8);
     }
 
@@ -2005,18 +2003,19 @@ function createClock() {
 }
 
 function updateClock() {
-    const time = Date.now() - gameStartTime;
+    const time = Date.now() - GAME_START_TIME;  // Use GAME_START_TIME constante
     const cycleProgress = (time % cycleDuration) / cycleDuration;
 
-    // Converte o progresso do ciclo em horas (24 horas por ciclo)
-    const totalHours = cycleProgress * 24;
+    // Calcula as horas baseado no ângulo do sol (começa ao meio-dia)
+    const angle = (cycleProgress * Math.PI * 2) + (Math.PI / 2);
+    const totalHours = ((angle / (Math.PI * 2)) * 24 + 12) % 24;
     const hours = Math.floor(totalHours);
     const minutes = Math.floor((totalHours - hours) * 60);
 
-    // Formata o tempo com zeros à esquerda
+    // Formata o tempo
     const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 
-    // Determina o período do dia
+    // Determina o período do dia baseado no ângulo do sol
     let period;
     if (hours >= 5 && hours < 12) {
         period = 'Manhã';
