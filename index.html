@@ -35,11 +35,19 @@
             <div id="creditsContent">
                 <h2 id="creditsTitle">CRÉDITOS</h2>
                 <div id="creditsText">
-                    <p>DAVID SANTOS AL78851</p>
-                    <p>DIOGO PINTO AL78734</p>
-                    <p>FILIPA MONTEIRO AL78231</p>
-                    <p>JOÃO ESTEVES AL78211</p>
-                    <p>Este jogo foi desenvolvido no âmbito da UC Computação Gráfica.</p>
+                    <p>Desenvolvedores:</p>
+                    <ul>
+                        <li>David Santos</li>
+                        <li>Diogo Pinto</li>
+                        <li>Filipa Monteiro</li>
+                        <li>João Esteves</li>
+                    </ul>
+                    <p>Orientado por:</p>
+                    <p>
+                        Unidade Curricular de Computação Gráfica – 2024/2025
+                        Licenciatura em Engenharia Informática – UTAD
+                    </p>
+                    <p>Este projecto teve como objectivo a aplicação prática dos principais conceitos de computação gráfica: modelação 3D, texturização, iluminação, câmaras, interacção e animação, tudo desenvolvido com a biblioteca Three.js.</p>
                 </div>
                 <button id="backButton">VOLTAR</button>
             </div>
@@ -49,8 +57,21 @@
         <div id="instructionsContainer">
             <div id="instructionsContent">
                 <h2 id="instructionsTitle">Instruções</h2>
-                <div id="intructionsText">
-                    <p>blablabla</p>
+                <div id="instructionsText">
+                    <p>Bem-vindo ao Bomboclat, um remake 3D do clássico Bomberman, desenvolvido no âmbito da unidade curricular de Computação Gráfica.</p>
+                    <p>Controlos do Jogo:</p>
+                    <ul>
+                        <li>W: Mover para cima</li>
+                        <li>A: Mover para a esquerda</li>
+                        <li>S: Mover para baixo</li>
+                        <li>D: Mover para a direita</li>
+                        <li>Espaço: Colocar bomba</li>
+                        <li>C: Alternar entre vistas (perspetiva / ortográfica)</li>
+                        <li>V: Activar câmara livre (movimento com rato e teclas direcionais)</li>
+                        <li>L: Menu de Iluminação</li>
+                        <li>Esc: Sair do jogo</li>
+                    </ul>
+                    <p>Elimina todos os inimigos, evita as explosões e apanha as moedas escondidas. Cuidado com os obstáculos!</p>
                 </div>
                 <button id="instructionsBackButton">VOLTAR</button>
             </div>
@@ -60,13 +81,14 @@
         <div id="mapsContainer">
             <div id="mapsContent">
                 <h2 id="mapsTitle">Mapas</h2>
+                
                 <div id="mapsText">
-                    <label for="mapSelect" style="display: none">Selecionar mapa</label>
-                    <select id="mapSelect">
-                        <option value="classic">Classic</option>
-                        <option value="maze">Maze</option>
-                        <option value="arena">Arena</option>
-                    </select>
+                    <p>Cada labirinto oferece um desafio único: caminhos apertados, armadilhas escondidas e inimigos em patrulha. Escolhe com sabedoria, a estratégia muda consoante o terreno!</p>
+                    <div class="map-options">
+                        <button class="mapOption" data-value="classic">CLASSIC</button>
+                        <button class="mapOption" data-value="maze">MAZE</button>
+                        <button class="mapOption" data-value="arena">ARENA</button>
+                    </div>
                 </div>
                 <button id="mapsPlayButton">JOGAR</button>
                 <button id="mapsBackButton">VOLTAR</button>

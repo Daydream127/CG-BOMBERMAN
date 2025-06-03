@@ -35,7 +35,6 @@ const mapsPlayButton = document.getElementById('mapsPlayButton');
 const GAME_START_TIME = 100000;
 const cycleDuration = 300000; 
 let gameStartTime = GAME_START_TIME;
-let clockElement;
 
 let lightControls;
 let lightReferences = {
@@ -100,14 +99,20 @@ const EXPLOSION_RANGE = 2;
 let canMove = true;
 let playerSpeed2 = 1.0;
 
-let currentMap = 'maze';
-let mazeLayout = GAME_MAPS[currentMap];
 
-
-playButton.addEventListener('click', startGame);
+playButton.addEventListener('click', () => startGame());
 mapsPlayButton.addEventListener('click', () => {
     hideMaps();
-    startGame();
+
+    const selectedButton = document.querySelector('.mapOption.selected');
+    const selectedMap = selectedButton ? selectedButton.dataset.value : null;
+
+    if (selectedMap) {
+        startGame(selectedMap);
+    } else {
+        startGame();
+    }
+
 });
 
 creditsButton.addEventListener('click', showCredits);
@@ -119,9 +124,12 @@ instructionsBackButton.addEventListener('click', hideInstructions);
 mapsButton.addEventListener('click', showMaps);
 mapsBackButton.addEventListener('click', hideMaps);
 
-function startGame() {
-    const mapSelect = document.getElementById('mapSelect');
-    currentMap = mapSelect.value;
+
+let currentMap = 'maze';
+let mazeLayout = GAME_MAPS[currentMap];
+
+function startGame(mapType = 'maze') {
+    currentMap = mapType;
     mazeLayout = GAME_MAPS[currentMap];
 
     menuContainer.style.display = 'none';
@@ -592,7 +600,6 @@ function init() {
     initializeRats();
     createLightControlPanel();
 
-    createClock();
     gameStartTime = GAME_START_TIME;
 
     
@@ -776,10 +783,6 @@ function restartGame() {
     window.removeEventListener('resize', onWindowResize);
 
     gameStartTime = GAME_START_TIME;
-    if (clockElement) {
-        gameContainer.removeChild(clockElement);
-    }
-
 
     while (scene.children.length > 0) {
         const object = scene.children[0];
@@ -1403,6 +1406,32 @@ function createTopViewPlayer() {
     topViewScene.add(topViewPlayer);
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+    const mapButtons = document.querySelectorAll('.mapOption');
+    let selectedMap = 'classic'; 
+    
+    mapButtons.forEach(button => {
+        button.addEventListener('click', function() {
+
+            mapButtons.forEach(btn => btn.classList.remove('selected'));
+            
+            this.classList.add('selected');
+            
+            selectedMap = this.getAttribute('data-value');
+        });
+    });
+    
+    document.querySelector('.mapOption[data-value="classic"]').classList.add('selected');
+    
+    document.getElementById('mapsPlayButton').addEventListener('click', () => {
+        menu.style.display = "none";
+        maps.style.display = "none";
+        game.style.display = "block";
+        
+        startGame(selectedMap);
+    });
+});
+
 function onKeyDown(event) {
     if (!canMove || !gameActive || isGameOver) return;
 
@@ -1613,7 +1642,6 @@ function animate() {
 
     if (gameActive) {
         updateLighting();
-        updateClock();
         const currentTime = Date.now();
         bombs.forEach(bomb => {
             const scale = 1 + 0.1 * Math.sin((currentTime - bomb.timer) / 200);
@@ -1896,45 +1924,6 @@ function updateLighting() {
     const skyColor = new THREE.Color();
     skyColor.lerpColors(nightColor, dayColor, Math.max(0, Math.sin(angle)));
     scene.background = skyColor;
-}
-
-function createClock() {
-    clockElement = document.createElement('div');
-    clockElement.style.position = 'absolute';
-    clockElement.style.top = '10px';
-    clockElement.style.right = '10px';
-    clockElement.style.color = 'white';
-    clockElement.style.fontSize = '24px';
-    clockElement.style.fontFamily = 'Arial, sans-serif';
-    clockElement.style.padding = '5px 10px';
-    clockElement.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-    clockElement.style.borderRadius = '5px';
-    gameContainer.appendChild(clockElement);
-}
-
-function updateClock() {
-    const time = Date.now() - GAME_START_TIME;  
-    const cycleProgress = (time % cycleDuration) / cycleDuration;
-
-    const angle = (cycleProgress * Math.PI * 2) + (Math.PI / 2);
-    const totalHours = ((angle / (Math.PI * 2)) * 24 + 12) % 24;
-    const hours = Math.floor(totalHours);
-    const minutes = Math.floor((totalHours - hours) * 60);
-
-    const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-
-    let period;
-    if (hours >= 5 && hours < 12) {
-        period = 'Manhã';
-    } else if (hours >= 12 && hours < 18) {
-        period = 'Tarde';
-    } else if (hours >= 18 && hours < 21) {
-        period = 'Anoitecer';
-    } else {
-        period = 'Noite';
-    }
-
-    clockElement.textContent = `${timeString} - ${period}`;
 }
 
 
