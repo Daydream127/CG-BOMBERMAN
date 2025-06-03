@@ -119,9 +119,8 @@ instructionsBackButton.addEventListener('click', hideInstructions);
 mapsButton.addEventListener('click', showMaps);
 mapsBackButton.addEventListener('click', hideMaps);
 
-function startGame() {
-    const mapSelect = document.getElementById('mapSelect');
-    currentMap = mapSelect.value;
+function startGame(mapType = 'classic') {
+    currentMap = mapType;
     mazeLayout = GAME_MAPS[currentMap];
 
     menuContainer.style.display = 'none';
@@ -1402,6 +1401,32 @@ function createTopViewPlayer() {
 
     topViewScene.add(topViewPlayer);
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    const mapButtons = document.querySelectorAll('.mapOption');
+    let selectedMap = 'classic'; 
+    
+    mapButtons.forEach(button => {
+        button.addEventListener('click', function() {
+
+            mapButtons.forEach(btn => btn.classList.remove('selected'));
+            
+            this.classList.add('selected');
+            
+            selectedMap = this.getAttribute('data-value');
+        });
+    });
+    
+    document.querySelector('.mapOption[data-value="classic"]').classList.add('selected');
+    
+    document.getElementById('mapsPlayButton').addEventListener('click', () => {
+        menu.style.display = "none";
+        maps.style.display = "none";
+        game.style.display = "block";
+        
+        startGame(selectedMap);
+    });
+});
 
 function onKeyDown(event) {
     if (!canMove || !gameActive || isGameOver) return;
