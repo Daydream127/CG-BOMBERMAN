@@ -1879,7 +1879,7 @@ function showLevelComplete() {
     levelCompleteDiv.style.textAlign = 'center';
     levelCompleteDiv.innerHTML = `
         <h2>Nivel Completo!</h2>
-        <p>Tens as moedas todsa!</p>
+        <p>Tens as moedas todas!</p>
         <button id="nextLevelButton" style="padding: 10px; margin-top: 10px;">Proximo Nivel</button>
     `;
 
